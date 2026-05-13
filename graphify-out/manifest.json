@@ -1,0 +1,130 @@
+{
+  "C:\\Users\\spexr\\pufferstudy\\next-env.d.ts": {
+    "mtime": 1778694523.7924178,
+    "hash": "90426577ad8f38459f3e566411c85589"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\next.config.ts": {
+    "mtime": 1778694152.9352999,
+    "hash": "8a9becd0dd0447503aa37374a503d4d9"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\postcss.config.mjs": {
+    "mtime": 1778694152.9563034,
+    "hash": "239f3ebf717465dc636818a1a619398d"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\types.ts": {
+    "mtime": 1778694221.8821695,
+    "hash": "181c88cf1f91613c36d936d1e6338696"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\app\\layout.tsx": {
+    "mtime": 1778694578.6648734,
+    "hash": "e4add96a979352a8bf10ff8cede48ed4"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\app\\page.tsx": {
+    "mtime": 1778694398.321308,
+    "hash": "372d9b104cea443f0f0adebf1ed99861"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\app\\api\\generate\\route.ts": {
+    "mtime": 1778694899.2139935,
+    "hash": "8bc2b13bd7e21d5f922867e349bdb833"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\app\\settings\\page.tsx": {
+    "mtime": 1778694465.004264,
+    "hash": "34c607a17508abca15f94799be978b4f"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\app\\subjects\\new\\page.tsx": {
+    "mtime": 1778694413.529339,
+    "hash": "d79fd632b4077e3863c02ca9212e5ecd"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\app\\subjects\\[id]\\page.tsx": {
+    "mtime": 1778694954.5087981,
+    "hash": "ebf94c2e475c0bc30fc1a3868bdaef56"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\app\\subjects\\[id]\\cheatsheet\\page.tsx": {
+    "mtime": 1778694937.6487372,
+    "hash": "6350d8fa3604b7ad92193839a658bcdf"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\components\\cheatsheet-view.tsx": {
+    "mtime": 1778694914.2368982,
+    "hash": "1379321fa40fdf791215ea13ff4b8b4e"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\components\\empty-state.tsx": {
+    "mtime": 1778694393.7005844,
+    "hash": "2df4bb2e85dc3f1961d9bf5fa0539087"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\components\\header.tsx": {
+    "mtime": 1778694340.9974697,
+    "hash": "dbd32a7ba0356a4a24a7d97c4a320964"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\components\\image-grid-item.tsx": {
+    "mtime": 1778694432.6335514,
+    "hash": "fb0d3c1b0d727eab624a69072a288f63"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\components\\image-uploader.tsx": {
+    "mtime": 1778694423.949183,
+    "hash": "d9957d11123356178fc93db3195ae622"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\components\\puffer-logo.tsx": {
+    "mtime": 1778694345.3268683,
+    "hash": "101fdb8ba089e8fecdcadda1bbb5bac2"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\components\\subject-card.tsx": {
+    "mtime": 1778694380.9121032,
+    "hash": "4aa7021dabe9ecc73b08f0eb9aa25ff1"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\components\\theme-provider.tsx": {
+    "mtime": 1778694330.339398,
+    "hash": "0275e616206930a3508fc22b6e0cd1f2"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\components\\theme-toggle.tsx": {
+    "mtime": 1778694499.5338404,
+    "hash": "e4750512e6a79e5d4f830c4ad959dbaa"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\components\\ui\\badge.tsx": {
+    "mtime": 1778694366.369167,
+    "hash": "699920d975642513f0d09156b1113017"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\components\\ui\\button.tsx": {
+    "mtime": 1778694352.5148451,
+    "hash": "c5911a4c91bed425568b709383bc8a24"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\components\\ui\\card.tsx": {
+    "mtime": 1778694358.6704986,
+    "hash": "e93fc28d15fc7b8b894b0eeb51abf573"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\components\\ui\\input.tsx": {
+    "mtime": 1778694362.1488154,
+    "hash": "e5bc22bef23bd551295fc841a9bc53f8"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\components\\ui\\label.tsx": {
+    "mtime": 1778694363.6355143,
+    "hash": "f74352d9ae374c085afc36d75092ec96"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\lib\\db.ts": {
+    "mtime": 1778694241.0855114,
+    "hash": "30184e10b98521763331f007a3f1b282"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\lib\\gemini-client.ts": {
+    "mtime": 1778694910.1976562,
+    "hash": "e4c8af2a9e17753e27f962ea64c043c7"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\lib\\prompts.ts": {
+    "mtime": 1778694880.0642467,
+    "hash": "c621398a94098a99e29f4d18922a1331"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\lib\\store.ts": {
+    "mtime": 1778694233.4336898,
+    "hash": "e63206404c53da59d81002fac1616046"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\lib\\utils.ts": {
+    "mtime": 1778694226.4475386,
+    "hash": "1ee762df9747f360bd5315fdd57137e2"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\docs\\design-system\\MASTER.md": {
+    "mtime": 1778694202.4439535,
+    "hash": "ce9879bbff458eeec2f2993731629392"
+  },
+  "C:\\Users\\spexr\\pufferstudy\\docs\\superpowers\\specs\\2026-05-13-pufferstudy-design.md": {
+    "mtime": 1778693030.9458156,
+    "hash": "d946c69165e7548a1366c26a96a7f01f"
+  }
+}
