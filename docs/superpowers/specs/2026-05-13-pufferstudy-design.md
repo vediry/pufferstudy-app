@@ -34,11 +34,13 @@ Single Next.js app deployed to Vercel. All persistence is client-side. The only 
 
 1. Student stores their Gemini API key in their own browser (localStorage).
 2. When generating, browser reads images from IndexedDB, base64-encodes them, and POSTs `{ apiKey, mode, images, captions, ... }` to `/api/generate`.
-3. The route handler forwards to Gemini's `generateContent` endpoint server-side, streams the response back.
+3. The route handler forwards to Gemini's `generateContent` endpoint server-side, streams the response back via a `ReadableStream`.
 4. Key is held in request memory only — never logged, never persisted.
 5. School filters only see traffic to `pufferstudy.vercel.app`, not to any AI provider domain.
 
 `mode` is one of `cheatsheet | chat | practice`. Same endpoint, different system prompts pulled from `lib/prompts.ts`.
+
+**Runtime:** Node.js (`export const runtime = "nodejs"`). Edge runtime is rejected because it has the same 4.5MB body limit but a stricter Web API surface, with no upside for this use case.
 
 ## File structure
 
@@ -116,7 +118,7 @@ type Settings    = { geminiKey: string | null; theme: "light" | "dark" | "system
 ### Upload images to a subject
 
 1. User picks files in `image-uploader.tsx`.
-2. If image > 4MB, resize client-side to max 1600px long edge, re-encode JPEG q=0.85.
+2. Resize client-side to max 1024px long edge, re-encode JPEG q=0.75. Target ~100KB per image. This is mandatory, not "only if over 4MB" — we need small images to stay under Vercel's 4.5MB serverless body limit when generating.
 3. For each file: generate uuid → `db.putImage({id, blob, mimeType, addedAt})` → push id into `subject.imageIds` in localStorage.
 4. Parent re-renders, fetches blobs by id, shows previews via `URL.createObjectURL`.
 
@@ -154,8 +156,9 @@ type Settings    = { geminiKey: string | null; theme: "light" | "dark" | "system
 | Gemini errors mid-stream | Route returns 502 `{error: "gemini_failed"}`; UI toasts, prior cheat sheet preserved |
 | Network failure / school filter | UI shows "Couldn't reach PufferStudy server. Check your connection." |
 | IndexedDB unavailable | Uploader shows "Your browser is blocking storage. Try a different browser or exit private mode." App still works for viewing existing subjects. |
-| Image > 4MB | Auto-resized client-side before storage |
-| > 20 images per generation | UI warns and asks student to remove some |
+| Any image upload | Auto-resized client-side to ~100KB before storage |
+| > 25 images per generation | UI warns and asks student to remove some (keeps request under Vercel's 4.5MB serverless body limit) |
+| Request body > 4MB | Frontend catches before sending, shows "Too many large images — try selecting fewer" |
 | Corrupted localStorage | `lib/store.ts` validates on read; falls back to empty if invalid |
 | Concurrent generation | Generate button disabled per-subject while in flight |
 | Delete subject | Confirmation dialog → removes blobs + metadata |
@@ -173,14 +176,13 @@ type Settings    = { geminiKey: string | null; theme: "light" | "dark" | "system
 **Core:**
 - Dashboard with subject tiles and days-until-test (red ≤ 3, amber ≤ 7).
 - Create new subject (name + test date + optional unit label).
-- Upload multiple images to existing subject; resize on upload.
+- Upload multiple images to existing subject; auto-resize to ~100KB on upload.
 - Per-image caption input.
 - Generate cheat sheet from photos using Gemini Vision.
 - Homework chat panel scoped to one subject's notes.
 - Auto-generated practice questions.
 - Delete subject / delete image.
-- Print-friendly cheat sheet view (Ctrl+P produces a clean handout).
-- Export cheat sheet as PDF (browser print-to-PDF).
+- Print-friendly cheat sheet view with two action buttons that both invoke `window.print()` — labeled "Print" and "Save as PDF" so the student understands they can do either. The print stylesheet hides app chrome and renders only the cheat sheet content.
 - Dark / light mode toggle.
 - Settings page: paste Gemini API key, with instructions for getting one free.
 
