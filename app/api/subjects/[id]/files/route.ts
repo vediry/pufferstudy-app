@@ -51,18 +51,41 @@ export async function POST(
   const fileId = randomUUID();
   const blobPath = `users/${userId}/subjects/${subjectId}/${fileId}`;
 
-  const blob = await put(blobPath, file, {
-    access: "public",
-    contentType: file.type,
-    addRandomSuffix: false,
-  });
+  let blobUrl: string;
+  try {
+    const blob = await put(blobPath, file, {
+      access: "public",
+      contentType: file.type,
+      addRandomSuffix: false,
+    });
+    blobUrl = blob.url;
+  } catch (err) {
+    console.error("blob put failed:", err);
+    return NextResponse.json(
+      {
+        error: "blob_error",
+        message: err instanceof Error ? err.message : "blob upload failed",
+      },
+      { status: 500 },
+    );
+  }
 
-  const record = await createFile(userId, subjectId, {
-    blobUrl: blob.url,
-    blobPath,
-    mimeType: file.type,
-    caption,
-  });
-
-  return NextResponse.json({ file: record });
+  try {
+    const record = await createFile(userId, subjectId, {
+      blobUrl,
+      blobPath,
+      mimeType: file.type,
+      caption,
+    });
+    return NextResponse.json({ file: record });
+  } catch (err) {
+    console.error("createFile failed:", err);
+    return NextResponse.json(
+      {
+        error: "db_error",
+        message: err instanceof Error ? err.message : "db insert failed",
+      },
+      { status: 500 },
+    );
+  }
 }
