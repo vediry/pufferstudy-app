@@ -1,19 +1,14 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
 
 const isPublicRoute = createRouteMatcher([
+  "/sign-in(.*)",
+  "/sign-up(.*)",
   "/api/generate(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
   if (isPublicRoute(req)) return;
-
-  const { userId } = await auth();
-  if (!userId) {
-    const signInUrl = new URL("https://pufferstudy-landing.vercel.app/sign-in");
-    signInUrl.searchParams.set("redirect_url", req.url);
-    return NextResponse.redirect(signInUrl);
-  }
+  await auth.protect();
 });
 
 export const config = {
