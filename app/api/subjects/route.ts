@@ -17,7 +17,7 @@ export async function POST(req: Request) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  let body: { name?: string; testLabel?: string | null };
+  let body: { name?: string; testLabel?: string | null; testDate?: string | null };
   try {
     body = await req.json();
   } catch {
@@ -31,6 +31,7 @@ export async function POST(req: Request) {
   const subject = await createSubject(userId, {
     name,
     testLabel: body.testLabel?.toString().trim() || null,
+    testDate: body.testDate?.toString().trim() || null,
   });
   return NextResponse.json({ subject });
 }

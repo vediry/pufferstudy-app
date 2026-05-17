@@ -7,8 +7,8 @@ import { ArrowLeft, Printer, FileDown, RefreshCcw, AlertCircle, KeyRound } from 
 import { Button } from "@/components/ui/button";
 import { CheatsheetView } from "@/components/cheatsheet-view";
 import { generate } from "@/lib/gemini-client";
-import { getSettings, getSubject, upsertSubject } from "@/lib/store";
-import type { Subject } from "@/types";
+import { getSettings } from "@/lib/store";
+import { useSubject, updateSubject } from "@/lib/cloud-subjects";
 
 type GenState =
   | { kind: "idle" }
@@ -20,20 +20,20 @@ export default function CheatsheetPage() {
   const params = useParams<{ id: string }>();
   const id = params.id;
 
-  const [subject, setSubject] = React.useState<Subject | null | undefined>(undefined);
+  const { subject, setSubject } = useSubject(id);
   const [hasKey, setHasKey] = React.useState<boolean>(false);
   const [state, setState] = React.useState<GenState>({ kind: "idle" });
   const abortRef = React.useRef<AbortController | null>(null);
 
   React.useEffect(() => {
-    if (!id) return;
-    const subj = getSubject(id);
-    setSubject(subj);
     setHasKey(!!getSettings().geminiKey);
-    if (subj?.cheatSheet) {
-      setState({ kind: "done", markdown: subj.cheatSheet.markdown });
+  }, []);
+
+  React.useEffect(() => {
+    if (subject && subject.cheatsheetMarkdown && state.kind === "idle") {
+      setState({ kind: "done", markdown: subject.cheatsheetMarkdown });
     }
-  }, [id]);
+  }, [subject, state.kind]);
 
   const start = React.useCallback(async () => {
     if (!subject) return;
@@ -46,11 +46,11 @@ export default function CheatsheetPage() {
       });
       return;
     }
-    if (subject.imageIds.length === 0) {
+    if (subject.files.length === 0) {
       setState({
         kind: "error",
-        code: "no_images",
-        message: "Add at least one photo to this subject first.",
+        code: "no_files",
+        message: "Add at least one file to this subject first.",
       });
       return;
     }
@@ -69,21 +69,21 @@ export default function CheatsheetPage() {
             prev.kind === "loading" ? { kind: "loading", partial: prev.partial + text } : prev,
           );
         },
-        onDone: (full) => {
+        onDone: async (full) => {
           setState({ kind: "done", markdown: full });
-          const next: Subject = {
-            ...subject,
-            cheatSheet: { markdown: full, generatedAt: new Date().toISOString() },
-          };
-          setSubject(next);
-          upsertSubject(next);
+          try {
+            const updated = await updateSubject(subject.id, { cheatsheetMarkdown: full });
+            setSubject({ ...subject, ...updated, files: subject.files });
+          } catch (err) {
+            console.error("Failed to persist cheatsheet:", err);
+          }
         },
         onError: (message, code = "unknown") => {
           setState({ kind: "error", code, message });
         },
       },
     );
-  }, [subject]);
+  }, [subject, setSubject]);
 
   React.useEffect(() => {
     return () => {
@@ -109,7 +109,7 @@ export default function CheatsheetPage() {
     );
   }
 
-  const showInitialCTA = state.kind === "idle";
+  const showInitialCTA = state.kind === "idle" && !subject.cheatsheetMarkdown;
 
   return (
     <div className="mx-auto w-full max-w-[1120px] px-4 py-10 sm:px-8 sm:py-12">
@@ -128,11 +128,11 @@ export default function CheatsheetPage() {
             <h1 className="text-[2rem] font-bold leading-[1.15] tracking-tight sm:text-[2.25rem]">
               {subject.name}
             </h1>
-            {subject.cheatSheet ? (
+            {subject.cheatsheetGeneratedAt ? (
               <p className="text-[13px] text-ink-faint">
                 Last generated{" "}
                 <span className="tabular">
-                  {new Date(subject.cheatSheet.generatedAt).toLocaleString()}
+                  {new Date(subject.cheatsheetGeneratedAt).toLocaleString()}
                 </span>
               </p>
             ) : null}
@@ -147,7 +147,7 @@ export default function CheatsheetPage() {
               <RefreshCcw className={state.kind === "loading" ? "animate-spin" : undefined} />
               {state.kind === "loading"
                 ? "Generating…"
-                : state.kind === "done" || subject.cheatSheet
+                : state.kind === "done" || subject.cheatsheetMarkdown
                   ? "Regenerate"
                   : "Generate"}
             </Button>
@@ -204,8 +204,8 @@ export default function CheatsheetPage() {
       {showInitialCTA ? (
         <div className="no-print rounded-[var(--radius-xl)] border border-default border-dashed bg-surface-2/40 px-6 py-12 text-center">
           <p className="mb-6 text-[15px] text-ink-muted">
-            Ready to turn {subject.imageIds.length}{" "}
-            {subject.imageIds.length === 1 ? "photo" : "photos"} into a printable cheat sheet?
+            Ready to turn {subject.files.length}{" "}
+            {subject.files.length === 1 ? "file" : "files"} into a printable cheat sheet?
           </p>
           <Button onClick={start} size="lg" disabled={!hasKey}>
             <RefreshCcw />
@@ -220,9 +220,8 @@ export default function CheatsheetPage() {
       ) : state.kind === "done" ? (
         <CheatsheetView markdown={state.markdown} />
       ) : (
-        // error state — show the previous saved sheet if any
-        subject.cheatSheet ? (
-          <CheatsheetView markdown={subject.cheatSheet.markdown} />
+        subject.cheatsheetMarkdown ? (
+          <CheatsheetView markdown={subject.cheatsheetMarkdown} />
         ) : null
       )}
     </div>

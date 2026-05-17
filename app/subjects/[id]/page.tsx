@@ -8,62 +8,62 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ImageUploader } from "@/components/image-uploader";
 import { ImageGridItem } from "@/components/image-grid-item";
-import { getSubject, upsertSubject, deleteSubject } from "@/lib/store";
-import { deleteImage } from "@/lib/db";
+import {
+  useSubject,
+  deleteSubject,
+  deleteFile,
+  updateFileCaption,
+  type SubjectFile,
+} from "@/lib/cloud-subjects";
 import { countdownLabel, countdownTone, daysUntil } from "@/lib/utils";
-import type { Subject } from "@/types";
 
 export default function SubjectPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const id = params.id;
 
-  const [subject, setSubject] = React.useState<Subject | null | undefined>(undefined);
+  const { subject, error, refresh, setSubject } = useSubject(id);
 
-  React.useEffect(() => {
-    if (!id) return;
-    setSubject(getSubject(id));
-  }, [id]);
-
-  function update(next: Subject) {
-    setSubject(next);
-    upsertSubject(next);
+  function onUploaded(newFiles: SubjectFile[]) {
+    if (!subject) return;
+    setSubject({ ...subject, files: [...subject.files, ...newFiles] });
   }
 
-  function onUploaded(newIds: string[]) {
+  async function onCaption(file: SubjectFile, caption: string) {
     if (!subject) return;
-    update({ ...subject, imageIds: [...subject.imageIds, ...newIds] });
-  }
-
-  function onCaption(imageId: string, caption: string) {
-    if (!subject) return;
-    update({ ...subject, captions: { ...subject.captions, [imageId]: caption } });
-  }
-
-  async function onDeleteImage(imageId: string) {
-    if (!subject) return;
+    setSubject({
+      ...subject,
+      files: subject.files.map((f) => (f.id === file.id ? { ...f, caption } : f)),
+    });
     try {
-      await deleteImage(imageId);
+      await updateFileCaption(subject.id, file.id, caption);
+    } catch (err) {
+      console.error(err);
+      refresh();
+    }
+  }
+
+  async function onDeleteFile(file: SubjectFile) {
+    if (!subject) return;
+    const previous = subject.files;
+    setSubject({ ...subject, files: subject.files.filter((f) => f.id !== file.id) });
+    try {
+      await deleteFile(subject.id, file.id);
+    } catch (err) {
+      console.error(err);
+      setSubject({ ...subject, files: previous });
+    }
+  }
+
+  async function onDeleteSubject() {
+    if (!subject) return;
+    if (!window.confirm(`Delete "${subject.name}" and its files?`)) return;
+    try {
+      await deleteSubject(subject.id);
+      router.push("/");
     } catch (err) {
       console.error(err);
     }
-    const captions = { ...subject.captions };
-    delete captions[imageId];
-    update({
-      ...subject,
-      imageIds: subject.imageIds.filter((x) => x !== imageId),
-      captions,
-    });
-  }
-
-  function onDeleteSubject() {
-    if (!subject) return;
-    if (!window.confirm(`Delete "${subject.name}" and its photos?`)) return;
-    for (const imgId of subject.imageIds) {
-      deleteImage(imgId).catch(() => {});
-    }
-    deleteSubject(subject.id);
-    router.push("/");
   }
 
   if (subject === undefined) {
@@ -79,7 +79,7 @@ export default function SubjectPage() {
       <div className="mx-auto w-full max-w-[640px] px-4 py-16 text-center sm:px-8">
         <h1 className="mb-2 text-xl font-semibold text-ink">Subject not found</h1>
         <p className="mb-6 text-ink-muted">
-          It may have been deleted or you&apos;re on a different browser than the one that created it.
+          {error ?? "It may have been deleted."}
         </p>
         <Button asChild>
           <Link href="/">Back to subjects</Link>
@@ -91,8 +91,9 @@ export default function SubjectPage() {
   const days = daysUntil(subject.testDate);
   const tone = countdownTone(days);
   const label = countdownLabel(days);
-  const empty = subject.imageIds.length === 0;
+  const empty = subject.files.length === 0;
   const canGenerate = !empty;
+  const hasCheatsheet = !!subject.cheatsheetMarkdown;
 
   return (
     <div className="mx-auto w-full max-w-[1120px] px-4 py-10 sm:px-8 sm:py-12">
@@ -118,12 +119,12 @@ export default function SubjectPage() {
           <Button
             asChild={canGenerate}
             disabled={!canGenerate}
-            title={canGenerate ? "Generate cheat sheet" : "Add at least one photo first"}
+            title={canGenerate ? "Generate cheat sheet" : "Add at least one file first"}
           >
             {canGenerate ? (
               <Link href={`/subjects/${subject.id}/cheatsheet`}>
                 <Sparkles />
-                {subject.cheatSheet ? "Open cheat sheet" : "Generate cheat sheet"}
+                {hasCheatsheet ? "Open cheat sheet" : "Generate cheat sheet"}
               </Link>
             ) : (
               <>
@@ -143,28 +144,27 @@ export default function SubjectPage() {
       </header>
 
       <section className="mb-8">
-        <ImageUploader onUploaded={onUploaded} />
+        <ImageUploader subjectId={subject.id} onUploaded={onUploaded} />
       </section>
 
       {empty ? (
         <div className="rounded-[var(--radius-xl)] border border-default border-dashed bg-surface-2/40 px-6 py-12 text-center text-ink-muted">
           <p className="text-[15px]">
-            No photos yet. Snap a few pictures of your notes, packets, or homework — then come back here.
+            No files yet. Snap a photo of your notes, drop in a PDF, or upload a packet — then come back here.
           </p>
         </div>
       ) : (
         <section>
           <h2 className="mb-4 text-base font-medium text-ink-muted">
-            {subject.imageIds.length} {subject.imageIds.length === 1 ? "photo" : "photos"}
+            {subject.files.length} {subject.files.length === 1 ? "file" : "files"}
           </h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {subject.imageIds.map((imgId) => (
+            {subject.files.map((file) => (
               <ImageGridItem
-                key={imgId}
-                imageId={imgId}
-                caption={subject.captions[imgId] ?? ""}
-                onCaptionChange={(next) => onCaption(imgId, next)}
-                onDelete={() => onDeleteImage(imgId)}
+                key={file.id}
+                file={file}
+                onCaptionChange={(next) => onCaption(file, next)}
+                onDelete={() => onDeleteFile(file)}
               />
             ))}
           </div>

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import {
   systemPromptFor,
   userPromptForCheatsheet,
@@ -6,27 +7,20 @@ import {
   userPromptForPractice,
   type GenerateMode,
 } from "@/lib/prompts";
+import { getFilesByIds } from "@/lib/subjects-db";
 import type { ChatMessage } from "@/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// The default Gemini model. Flash is fast, multimodal, and free-tier friendly.
 const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
-
-type InlineImage = {
-  mimeType: string;
-  data: string; // base64, no data: prefix
-};
 
 type Body = {
   apiKey: string;
   mode: GenerateMode;
   subjectName: string;
   testLabel?: string;
-  images: InlineImage[];
-  captions: string[];
-  // chat-only
+  fileIds: string[];
   question?: string;
   history?: ChatMessage[];
 };
@@ -35,7 +29,23 @@ function bad(status: number, message: string, code = "bad_request") {
   return NextResponse.json({ error: code, message }, { status });
 }
 
+async function blobUrlToBase64(url: string): Promise<{ mimeType: string; data: string } | null> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const mimeType = res.headers.get("content-type") ?? "application/octet-stream";
+    const ab = await res.arrayBuffer();
+    const data = Buffer.from(ab).toString("base64");
+    return { mimeType, data };
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(req: Request) {
+  const { userId } = await auth();
+  if (!userId) return bad(401, "Sign in to generate.", "unauthorized");
+
   let body: Body;
   try {
     body = (await req.json()) as Body;
@@ -43,7 +53,7 @@ export async function POST(req: Request) {
     return bad(400, "Request body must be valid JSON.");
   }
 
-  const { apiKey, mode, subjectName, images, captions } = body;
+  const { apiKey, mode, subjectName, fileIds } = body;
 
   if (typeof apiKey !== "string" || apiKey.trim().length < 10) {
     return bad(401, "Missing or invalid API key.", "invalid_key");
@@ -54,15 +64,20 @@ export async function POST(req: Request) {
   if (typeof subjectName !== "string" || !subjectName.trim()) {
     return bad(400, "subjectName is required.");
   }
-  if (!Array.isArray(images)) {
-    return bad(400, "images must be an array.");
+  if (!Array.isArray(fileIds)) {
+    return bad(400, "fileIds must be an array.");
   }
-  if (!Array.isArray(captions)) {
-    return bad(400, "captions must be an array.");
+  if (mode !== "chat" && fileIds.length === 0) {
+    return bad(400, "Add at least one file before generating.");
   }
-  if (mode !== "chat" && images.length === 0) {
-    return bad(400, "Add at least one photo before generating.");
-  }
+
+  // Fetch the files the user owns from DB, then download blobs in parallel
+  const records = await getFilesByIds(userId, fileIds);
+  const captions = records.map((r) => r.caption ?? "");
+  const inlinedFiles = await Promise.all(
+    records.map((r) => blobUrlToBase64(r.blob_url)),
+  );
+  const validFiles = inlinedFiles.filter((f): f is { mimeType: string; data: string } => f !== null);
 
   let userPrompt: string;
   if (mode === "cheatsheet") {
@@ -89,9 +104,8 @@ export async function POST(req: Request) {
     | { text: string }
     | { inline_data: { mime_type: string; data: string } }
   > = [{ text: userPrompt }];
-  for (const img of images) {
-    if (!img || typeof img.data !== "string" || typeof img.mimeType !== "string") continue;
-    parts.push({ inline_data: { mime_type: img.mimeType, data: img.data } });
+  for (const f of validFiles) {
+    parts.push({ inline_data: { mime_type: f.mimeType, data: f.data } });
   }
 
   const contents: Array<{
@@ -145,7 +159,6 @@ export async function POST(req: Request) {
     return bad(502, "AI service returned no body.", "gemini_failed");
   }
 
-  // Stream SSE chunks, extract text deltas, forward as plain text.
   const decoder = new TextDecoder();
   const encoder = new TextEncoder();
   const upstreamReader = res.body.getReader();
@@ -166,9 +179,7 @@ export async function POST(req: Request) {
           if (!payload || payload === "[DONE]") continue;
           try {
             const obj = JSON.parse(payload) as {
-              candidates?: Array<{
-                content?: { parts?: Array<{ text?: string }> };
-              }>;
+              candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
             };
             const text = obj.candidates?.[0]?.content?.parts
               ?.map((p) => p.text ?? "")

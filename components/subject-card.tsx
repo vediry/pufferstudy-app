@@ -4,13 +4,17 @@ import Link from "next/link";
 import { BookOpen, ImageIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { countdownLabel, countdownTone, daysUntil } from "@/lib/utils";
-import type { Subject } from "@/types";
+import type { Subject } from "@/lib/cloud-subjects";
 
-export function SubjectCard({ subject }: { subject: Subject }) {
+type Props = {
+  subject: Subject;
+  fileCount?: number;
+};
+
+export function SubjectCard({ subject, fileCount = 0 }: Props) {
   const days = daysUntil(subject.testDate);
   const tone = countdownTone(days);
   const label = countdownLabel(days);
-  const imageCount = subject.imageIds.length;
 
   return (
     <Link
@@ -36,7 +40,7 @@ export function SubjectCard({ subject }: { subject: Subject }) {
       <div className="mt-auto flex items-center gap-1.5 pt-2 text-sm text-ink-faint">
         <ImageIcon className="h-4 w-4" strokeWidth={1.75} />
         <span className="tabular">
-          {imageCount} {imageCount === 1 ? "photo" : "photos"}
+          {fileCount} {fileCount === 1 ? "file" : "files"}
         </span>
       </div>
     </Link>

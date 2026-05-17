@@ -28,14 +28,24 @@ export async function PATCH(
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  let body: { name?: string; testLabel?: string | null };
+  let body: {
+    name?: string;
+    testLabel?: string | null;
+    testDate?: string | null;
+    cheatsheetMarkdown?: string | null;
+  };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "invalid_json" }, { status: 400 });
   }
 
-  const patch: { name?: string; testLabel?: string | null } = {};
+  const patch: {
+    name?: string;
+    testLabel?: string | null;
+    testDate?: string | null;
+    cheatsheetMarkdown?: string | null;
+  } = {};
   if (typeof body.name === "string") {
     const trimmed = body.name.trim();
     if (!trimmed) return NextResponse.json({ error: "name_required" }, { status: 400 });
@@ -44,6 +54,12 @@ export async function PATCH(
   }
   if (body.testLabel !== undefined) {
     patch.testLabel = body.testLabel?.toString().trim() || null;
+  }
+  if (body.testDate !== undefined) {
+    patch.testDate = body.testDate?.toString().trim() || null;
+  }
+  if (body.cheatsheetMarkdown !== undefined) {
+    patch.cheatsheetMarkdown = body.cheatsheetMarkdown;
   }
 
   const updated = await updateSubject(userId, id, patch);

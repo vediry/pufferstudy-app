@@ -2,11 +2,13 @@
 
 import * as React from "react";
 import { Upload, Loader2, Camera } from "lucide-react";
-import { cn, uuid } from "@/lib/utils";
-import { putImage, resizeImageBlob } from "@/lib/db";
+import { cn } from "@/lib/utils";
+import { resizeImageBlob } from "@/lib/db";
+import { uploadFile, type SubjectFile } from "@/lib/cloud-subjects";
 
 type Props = {
-  onUploaded: (ids: string[]) => void;
+  subjectId: string;
+  onUploaded: (files: SubjectFile[]) => void;
   className?: string;
 };
 
@@ -18,7 +20,7 @@ function isAccepted(file: File): boolean {
   );
 }
 
-export function ImageUploader({ onUploaded, className }: Props) {
+export function ImageUploader({ subjectId, onUploaded, className }: Props) {
   const fileInput = React.useRef<HTMLInputElement>(null);
   const [busy, setBusy] = React.useState(false);
   const [drag, setDrag] = React.useState(false);
@@ -33,26 +35,25 @@ export function ImageUploader({ onUploaded, className }: Props) {
         setError("Pick photos (JPG/PNG/HEIC) or PDFs.");
         return;
       }
-      const ids: string[] = [];
+      const uploaded: SubjectFile[] = [];
       for (const file of list) {
         const isPdf = file.type === "application/pdf";
         const blob = isPdf ? file : await resizeImageBlob(file);
-        const id = uuid();
-        await putImage({
-          id,
-          blob,
-          mimeType: blob.type || (isPdf ? "application/pdf" : "image/jpeg"),
-          addedAt: new Date().toISOString(),
-        });
-        ids.push(id);
+        const blobAsFile = blob instanceof File
+          ? blob
+          : new File([blob], file.name || (isPdf ? "doc.pdf" : "photo.jpg"), {
+              type: blob.type || (isPdf ? "application/pdf" : "image/jpeg"),
+            });
+        const record = await uploadFile(subjectId, blobAsFile, "");
+        uploaded.push(record);
       }
-      onUploaded(ids);
+      onUploaded(uploaded);
     } catch (err) {
       console.error(err);
       setError(
         err instanceof Error
           ? `Couldn't add those files: ${err.message}`
-          : "Couldn't add those files. Try a different browser or check storage permissions.",
+          : "Couldn't add those files. Try again.",
       );
     } finally {
       setBusy(false);
@@ -111,10 +112,10 @@ export function ImageUploader({ onUploaded, className }: Props) {
         )}
         <div className="flex flex-col gap-1">
           <p className="text-[15px] font-medium text-ink">
-            {busy ? "Adding files…" : "Drop photos or PDFs here, or click to pick"}
+            {busy ? "Uploading…" : "Drop photos or PDFs here, or click to pick"}
           </p>
           <p className="text-[13px] text-ink-faint">
-            Photos get resized to save space. PDFs uploaded as-is.
+            Photos get resized to save bandwidth. PDFs uploaded as-is.
           </p>
         </div>
         <input

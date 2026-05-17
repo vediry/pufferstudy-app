@@ -6,6 +6,9 @@ export type DbSubject = {
   user_id: string;
   name: string;
   test_label: string | null;
+  test_date: string | null;
+  cheatsheet_markdown: string | null;
+  cheatsheet_generated_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -50,11 +53,15 @@ export async function getSubjectWithFiles(
 
 export async function createSubject(
   userId: string,
-  input: { name: string; testLabel?: string | null },
+  input: {
+    name: string;
+    testLabel?: string | null;
+    testDate?: string | null;
+  },
 ): Promise<DbSubject> {
   const { rows } = await sql<DbSubject>`
-    INSERT INTO subjects (user_id, name, test_label)
-    VALUES (${userId}, ${input.name}, ${input.testLabel ?? null})
+    INSERT INTO subjects (user_id, name, test_label, test_date)
+    VALUES (${userId}, ${input.name}, ${input.testLabel ?? null}, ${input.testDate ?? null})
     RETURNING *
   `;
   return rows[0];
@@ -63,19 +70,36 @@ export async function createSubject(
 export async function updateSubject(
   userId: string,
   subjectId: string,
-  patch: { name?: string; testLabel?: string | null },
+  patch: {
+    name?: string;
+    testLabel?: string | null;
+    testDate?: string | null;
+    cheatsheetMarkdown?: string | null;
+  },
 ): Promise<DbSubject | null> {
-  if (patch.name === undefined && patch.testLabel === undefined) {
+  const noFields =
+    patch.name === undefined &&
+    patch.testLabel === undefined &&
+    patch.testDate === undefined &&
+    patch.cheatsheetMarkdown === undefined;
+
+  if (noFields) {
     const { rows } = await sql<DbSubject>`
       SELECT * FROM subjects WHERE id = ${subjectId} AND user_id = ${userId}
     `;
     return rows[0] ?? null;
   }
+
+  const cheatsheetTimestamp = patch.cheatsheetMarkdown !== undefined ? new Date().toISOString() : null;
+
   const { rows } = await sql<DbSubject>`
     UPDATE subjects
     SET
       name = COALESCE(${patch.name ?? null}, name),
-      test_label = COALESCE(${patch.testLabel ?? null}, test_label),
+      test_label = CASE WHEN ${patch.testLabel === undefined ? "no" : "yes"}::text = 'yes' THEN ${patch.testLabel ?? null} ELSE test_label END,
+      test_date = CASE WHEN ${patch.testDate === undefined ? "no" : "yes"}::text = 'yes' THEN ${patch.testDate ?? null}::date ELSE test_date END,
+      cheatsheet_markdown = CASE WHEN ${patch.cheatsheetMarkdown === undefined ? "no" : "yes"}::text = 'yes' THEN ${patch.cheatsheetMarkdown ?? null} ELSE cheatsheet_markdown END,
+      cheatsheet_generated_at = CASE WHEN ${patch.cheatsheetMarkdown === undefined ? "no" : "yes"}::text = 'yes' THEN ${cheatsheetTimestamp}::timestamptz ELSE cheatsheet_generated_at END,
       updated_at = now()
     WHERE id = ${subjectId} AND user_id = ${userId}
     RETURNING *

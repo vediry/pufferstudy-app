@@ -1,10 +1,8 @@
 "use client";
 
-import { getImage } from "@/lib/db";
 import type { GenerateMode } from "@/lib/prompts";
-import type { ChatMessage, Subject } from "@/types";
-
-const MAX_BODY_BYTES = 4 * 1024 * 1024; // 4MB, comfortably under Vercel's 4.5MB serverless body limit
+import type { ChatMessage } from "@/types";
+import type { SubjectWithFiles } from "@/lib/cloud-subjects";
 
 export type StreamHandlers = {
   onDelta: (text: string) => void;
@@ -15,7 +13,7 @@ export type StreamHandlers = {
 
 type GenerateInput = {
   apiKey: string;
-  subject: Subject;
+  subject: SubjectWithFiles;
   mode: GenerateMode;
   question?: string;
   history?: ChatMessage[];
@@ -27,42 +25,22 @@ export async function generate(input: GenerateInput, handlers: StreamHandlers): 
     return;
   }
 
-  const images: Array<{ mimeType: string; data: string }> = [];
-  const captions: string[] = [];
-  for (const imgId of input.subject.imageIds) {
-    const rec = await getImage(imgId);
-    if (!rec) continue;
-    const dataUrl = await blobToBase64(rec.blob);
-    images.push({ mimeType: rec.mimeType || "image/jpeg", data: dataUrl });
-    captions.push(input.subject.captions[imgId] ?? "");
-  }
-
   const payload = {
     apiKey: input.apiKey,
     mode: input.mode,
     subjectName: input.subject.name,
-    testLabel: input.subject.testLabel,
-    images,
-    captions,
+    testLabel: input.subject.testLabel ?? undefined,
+    fileIds: input.subject.files.map((f) => f.id),
     question: input.question,
     history: input.history,
   };
-
-  const bodyJson = JSON.stringify(payload);
-  if (bodyJson.length > MAX_BODY_BYTES) {
-    handlers.onError(
-      "Too many photos for one request. Remove a few and try again.",
-      "body_too_large",
-    );
-    return;
-  }
 
   let res: Response;
   try {
     res = await fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: bodyJson,
+      body: JSON.stringify(payload),
       signal: handlers.signal,
     });
   } catch (err) {
@@ -106,17 +84,4 @@ export async function generate(input: GenerateInput, handlers: StreamHandlers): 
     if ((err as Error).name === "AbortError") return;
     handlers.onError("The stream was interrupted. Try again.", "stream_failed");
   }
-}
-
-function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(reader.error);
-    reader.onload = () => {
-      const result = reader.result as string;
-      const comma = result.indexOf(",");
-      resolve(comma >= 0 ? result.slice(comma + 1) : result);
-    };
-    reader.readAsDataURL(blob);
-  });
 }

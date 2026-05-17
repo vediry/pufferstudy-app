@@ -6,24 +6,19 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SubjectCard } from "@/components/subject-card";
 import { DashboardEmptyState } from "@/components/empty-state";
-import { getSubjects } from "@/lib/store";
-import type { Subject } from "@/types";
+import { MigrationBanner } from "@/components/migration-banner";
+import { useSubjects } from "@/lib/cloud-subjects";
 
 export default function DashboardPage() {
-  const [subjects, setSubjects] = React.useState<Subject[] | null>(null);
+  const { subjects, error, refresh } = useSubjects();
 
   React.useEffect(() => {
-    setSubjects(getSubjects());
-    function refresh() {
-      setSubjects(getSubjects());
+    function onFocus() {
+      refresh();
     }
-    window.addEventListener("storage", refresh);
-    window.addEventListener("focus", refresh);
-    return () => {
-      window.removeEventListener("storage", refresh);
-      window.removeEventListener("focus", refresh);
-    };
-  }, []);
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [refresh]);
 
   const ready = subjects !== null;
   const items = subjects ?? [];
@@ -47,6 +42,14 @@ export default function DashboardPage() {
         </Button>
       </div>
 
+      <MigrationBanner onMigrated={refresh} />
+
+      {error ? (
+        <div className="mb-6 rounded-[var(--radius-lg)] border border-default bg-surface-2 px-4 py-3 text-sm text-[var(--danger)]">
+          {error}
+        </div>
+      ) : null}
+
       {!ready ? (
         <SubjectSkeletonGrid />
       ) : items.length === 0 ? (
@@ -54,7 +57,7 @@ export default function DashboardPage() {
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
           {items.map((subject) => (
-            <SubjectCard key={subject.id} subject={subject} />
+            <SubjectCard key={subject.id} subject={subject} fileCount={0} />
           ))}
         </div>
       )}

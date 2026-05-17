@@ -3,13 +3,12 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { upsertSubject } from "@/lib/store";
-import { uuid } from "@/lib/utils";
+import { createSubject } from "@/lib/cloud-subjects";
 
 export default function NewSubjectPage() {
   const router = useRouter();
@@ -17,25 +16,28 @@ export default function NewSubjectPage() {
   const [testDate, setTestDate] = React.useState("");
   const [testLabel, setTestLabel] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
+  const [submitting, setSubmitting] = React.useState(false);
 
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const trimmed = name.trim();
     if (!trimmed) {
       setError("Give your subject a name so you can find it later.");
       return;
     }
-    const id = uuid();
-    upsertSubject({
-      id,
-      name: trimmed,
-      testDate: testDate || null,
-      testLabel: testLabel.trim() || undefined,
-      createdAt: new Date().toISOString(),
-      imageIds: [],
-      captions: {},
-    });
-    router.push(`/subjects/${id}`);
+    setSubmitting(true);
+    setError(null);
+    try {
+      const created = await createSubject({
+        name: trimmed,
+        testLabel: testLabel.trim() || null,
+        testDate: testDate || null,
+      });
+      router.push(`/subjects/${created.id}`);
+    } catch (err) {
+      setSubmitting(false);
+      setError(err instanceof Error ? err.message : "Couldn't create that subject.");
+    }
   }
 
   return (
@@ -107,7 +109,10 @@ export default function NewSubjectPage() {
             </div>
 
             <div className="flex items-center gap-3 pt-2">
-              <Button type="submit" size="lg">Create subject</Button>
+              <Button type="submit" size="lg" disabled={submitting}>
+                {submitting ? <Loader2 className="animate-spin" /> : null}
+                {submitting ? "Creating..." : "Create subject"}
+              </Button>
               <Button type="button" variant="ghost" asChild>
                 <Link href="/">Cancel</Link>
               </Button>
