@@ -28,10 +28,21 @@ export async function POST(req: Request) {
   if (!name) return NextResponse.json({ error: "name_required" }, { status: 400 });
   if (name.length > 120) return NextResponse.json({ error: "name_too_long" }, { status: 400 });
 
-  const subject = await createSubject(userId, {
-    name,
-    testLabel: body.testLabel?.toString().trim() || null,
-    testDate: body.testDate?.toString().trim() || null,
-  });
-  return NextResponse.json({ subject });
+  try {
+    const subject = await createSubject(userId, {
+      name,
+      testLabel: body.testLabel?.toString().trim() || null,
+      testDate: body.testDate?.toString().trim() || null,
+    });
+    return NextResponse.json({ subject });
+  } catch (err) {
+    console.error("createSubject failed:", err);
+    return NextResponse.json(
+      {
+        error: "db_error",
+        message: err instanceof Error ? err.message : "unknown database error",
+      },
+      { status: 500 },
+    );
+  }
 }
