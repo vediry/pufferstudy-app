@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Settings as SettingsIcon } from "lucide-react";
+import { UserButton } from "@clerk/nextjs";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { PufferLogo } from "@/components/puffer-logo";
 
@@ -24,6 +25,17 @@ export function Header() {
             <span className="hidden sm:inline">Settings</span>
           </Link>
           <ThemeToggle />
+          <UserButton
+            appearance={{
+              elements: {
+                avatarBox: "h-9 w-9",
+                userButtonPopoverCard: "bg-surface border border-default shadow-lifted",
+                userButtonPopoverActionButton: "text-ink hover:bg-surface-2",
+                userButtonPopoverActionButtonText: "text-ink",
+                userButtonPopoverFooter: "hidden",
+              },
+            }}
+          />
         </nav>
       </div>
     </header>

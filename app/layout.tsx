@@ -75,7 +75,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         className={`${splineSans.variable} ${splineSansMono.variable}`}
       >
         <body className="min-h-dvh bg-canvas text-ink">
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            themes={["light", "dark", "forest"]}
+            disableTransitionOnChange
+          >
             <div className="flex min-h-dvh flex-col">
               <Header />
               <main className="flex-1">{children}</main>
