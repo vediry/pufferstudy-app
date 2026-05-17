@@ -19,6 +19,9 @@ export async function POST() {
       )
     `;
     await sql`CREATE INDEX IF NOT EXISTS idx_subjects_user ON subjects(user_id)`;
+    await sql`ALTER TABLE subjects ADD COLUMN IF NOT EXISTS test_date DATE`;
+    await sql`ALTER TABLE subjects ADD COLUMN IF NOT EXISTS cheatsheet_markdown TEXT`;
+    await sql`ALTER TABLE subjects ADD COLUMN IF NOT EXISTS cheatsheet_generated_at TIMESTAMPTZ`;
 
     await sql`
       CREATE TABLE IF NOT EXISTS files (
