@@ -5,7 +5,7 @@ import { Upload, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getSubjects, deleteSubject as deleteOldSubject } from "@/lib/store";
 import { getImage, deleteImage } from "@/lib/db";
-import { createSubject, uploadFile } from "@/lib/cloud-subjects";
+import { createSubject, fetchSubjects, uploadFile } from "@/lib/cloud-subjects";
 import type { Subject as OldSubject } from "@/types";
 
 const MIGRATED_FLAG_KEY = "pufferstudy_migrated_at";
@@ -14,7 +14,7 @@ type Phase =
   | { kind: "hidden" }
   | { kind: "ready"; oldSubjects: OldSubject[] }
   | { kind: "uploading"; progress: string }
-  | { kind: "done"; uploaded: number }
+  | { kind: "done"; uploaded: number; skipped: number }
   | { kind: "error"; message: string };
 
 type Props = {
@@ -38,12 +38,37 @@ export function MigrationBanner({ onMigrated }: Props) {
   async function upload() {
     if (phase.kind !== "ready") return;
     const { oldSubjects } = phase;
+
+    // Mark migration started IMMEDIATELY so reloads/duplicate clicks don't retrigger
+    localStorage.setItem(MIGRATED_FLAG_KEY, new Date().toISOString());
     setPhase({ kind: "uploading", progress: "Starting…" });
 
     let uploaded = 0;
+    let skipped = 0;
     try {
+      // Fetch existing cloud subjects so we don't duplicate
+      const existingCloud = await fetchSubjects();
+      const existingNames = new Set(
+        existingCloud.map((s) => s.name.trim().toLowerCase()),
+      );
+
       for (let i = 0; i < oldSubjects.length; i++) {
         const old = oldSubjects[i];
+        const normalizedName = old.name.trim().toLowerCase();
+
+        if (existingNames.has(normalizedName)) {
+          setPhase({
+            kind: "uploading",
+            progress: `Skipping "${old.name}" — already in your account.`,
+          });
+          deleteOldSubject(old.id);
+          for (const imgId of old.imageIds) {
+            await deleteImage(imgId).catch(() => undefined);
+          }
+          skipped++;
+          continue;
+        }
+
         setPhase({
           kind: "uploading",
           progress: `Uploading "${old.name}" (${i + 1} of ${oldSubjects.length})…`,
@@ -54,6 +79,7 @@ export function MigrationBanner({ onMigrated }: Props) {
           testLabel: old.testLabel ?? null,
           testDate: old.testDate ?? null,
         });
+        existingNames.add(normalizedName);
 
         for (let j = 0; j < old.imageIds.length; j++) {
           const imgId = old.imageIds[j];
@@ -75,8 +101,7 @@ export function MigrationBanner({ onMigrated }: Props) {
         uploaded++;
       }
 
-      localStorage.setItem(MIGRATED_FLAG_KEY, new Date().toISOString());
-      setPhase({ kind: "done", uploaded });
+      setPhase({ kind: "done", uploaded, skipped });
       onMigrated();
     } catch (err) {
       setPhase({
@@ -130,8 +155,11 @@ export function MigrationBanner({ onMigrated }: Props) {
           ) : phase.kind === "done" ? (
             <>
               <p className="font-medium text-ink">
-                Done — {phase.uploaded}{" "}
-                {phase.uploaded === 1 ? "subject" : "subjects"} uploaded
+                {phase.uploaded === 0 && phase.skipped > 0
+                  ? `Already in your account — ${phase.skipped} subject${phase.skipped === 1 ? "" : "s"} skipped`
+                  : phase.skipped > 0
+                  ? `Done — ${phase.uploaded} uploaded, ${phase.skipped} skipped (already in your account)`
+                  : `Done — ${phase.uploaded} ${phase.uploaded === 1 ? "subject" : "subjects"} uploaded`}
               </p>
               <p className="mt-1 text-sm text-ink-muted">
                 They&apos;ll now appear on every device you sign in from.
