@@ -141,8 +141,12 @@ export async function uploadFile(
     body: form,
   });
   if (!res.ok) {
-    const data = (await res.json().catch(() => ({}))) as { error?: string };
-    throw new Error(data.error ?? `uploadFile ${res.status}`);
+    const data = (await res.json().catch(() => ({}))) as {
+      error?: string;
+      message?: string;
+    };
+    const detail = data.message ?? data.error ?? `HTTP ${res.status}`;
+    throw new Error(detail);
   }
   const data = (await res.json()) as { file: DbFile };
   return mapFile(data.file);
