@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Spline_Sans, Spline_Sans_Mono } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Header } from "@/components/header";
 import "./globals.css";
@@ -34,22 +35,38 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={`${splineSans.variable} ${splineSansMono.variable}`}
+    <ClerkProvider
+      signInUrl="https://pufferstudy-landing.vercel.app/sign-in"
+      signUpUrl="https://pufferstudy-landing.vercel.app/sign-up"
+      appearance={{
+        variables: {
+          colorPrimary: "var(--primary)",
+          colorBackground: "var(--surface)",
+          colorText: "var(--ink)",
+          colorTextSecondary: "var(--ink-muted)",
+          colorInputBackground: "var(--surface-2)",
+          colorInputText: "var(--ink)",
+          fontFamily: "var(--font-spline-sans)",
+        },
+      }}
     >
-      <body className="min-h-dvh bg-canvas text-ink">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <div className="flex min-h-dvh flex-col">
-            <Header />
-            <main className="flex-1">{children}</main>
-            <footer className="mt-auto border-t border-default py-6 text-center text-sm text-ink-faint">
-              <span className="mx-auto">PufferStudy · Your notes, organized.</span>
-            </footer>
-          </div>
-        </ThemeProvider>
-      </body>
-    </html>
+      <html
+        lang="en"
+        suppressHydrationWarning
+        className={`${splineSans.variable} ${splineSansMono.variable}`}
+      >
+        <body className="min-h-dvh bg-canvas text-ink">
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+            <div className="flex min-h-dvh flex-col">
+              <Header />
+              <main className="flex-1">{children}</main>
+              <footer className="mt-auto border-t border-default py-6 text-center text-sm text-ink-faint">
+                <span className="mx-auto">PufferStudy · Your notes, organized.</span>
+              </footer>
+            </div>
+          </ThemeProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
