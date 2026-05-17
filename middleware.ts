@@ -13,6 +13,10 @@ export default clerkMiddleware(async (auth, req) => {
 
   const { userId } = await auth();
   if (!userId) {
+    // API routes return their own JSON 401 from the handler — let the request through
+    if (req.nextUrl.pathname.startsWith("/api/")) {
+      return;
+    }
     const signInUrl = new URL("/sign-in", req.url);
     signInUrl.searchParams.set("redirect_url", req.url);
     return NextResponse.redirect(signInUrl);
