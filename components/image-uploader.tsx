@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Upload, Loader2 } from "lucide-react";
+import { Upload, Loader2, Camera } from "lucide-react";
 import { cn, uuid } from "@/lib/utils";
 import { putImage, resizeImageBlob } from "@/lib/db";
 
@@ -61,6 +61,30 @@ export function ImageUploader({ onUploaded, className }: Props) {
 
   return (
     <div className={cn("flex flex-col gap-2", className)}>
+      <label
+        htmlFor="camera-capture-input"
+        className={cn(
+          "inline-flex cursor-pointer items-center justify-center gap-2 rounded-[var(--radius)] border border-default bg-surface-2 px-4 py-2.5 text-sm font-medium text-ink transition-colors",
+          "hover:bg-surface-3 sm:hidden",
+          busy && "pointer-events-none opacity-70",
+        )}
+      >
+        <Camera className="h-[18px] w-[18px]" strokeWidth={1.75} />
+        Take a photo
+        <input
+          id="camera-capture-input"
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="sr-only"
+          onChange={(e) => {
+            if (e.target.files && e.target.files.length > 0) {
+              handleFiles(e.target.files);
+              e.target.value = "";
+            }
+          }}
+        />
+      </label>
       <label
         htmlFor="image-uploader-input"
         onDragOver={(e) => {
