@@ -9,11 +9,18 @@ const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
 export function daysUntil(isoDate: string | null | undefined): number | null {
   if (!isoDate) return null;
-  const test = new Date(isoDate);
-  if (Number.isNaN(test.getTime())) return null;
+  // The server returns DATE as ISO string with UTC midnight (e.g. "2026-05-25T00:00:00.000Z").
+  // Parsing that directly shifts to the previous day in negative-UTC timezones.
+  // Take only the YYYY-MM-DD prefix and construct a LOCAL-midnight Date to avoid the shift.
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(isoDate);
+  if (!match) return null;
+  const test = new Date(
+    parseInt(match[1], 10),
+    parseInt(match[2], 10) - 1,
+    parseInt(match[3], 10),
+  );
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  test.setHours(0, 0, 0, 0);
   return Math.round((test.getTime() - today.getTime()) / MS_PER_DAY);
 }
 
