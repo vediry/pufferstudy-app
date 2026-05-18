@@ -6,7 +6,6 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SubjectCard } from "@/components/subject-card";
 import { DashboardEmptyState } from "@/components/empty-state";
-import { MigrationBanner } from "@/components/migration-banner";
 import { useSubjects } from "@/lib/cloud-subjects";
 
 export default function DashboardPage() {
@@ -41,8 +40,6 @@ export default function DashboardPage() {
           </Link>
         </Button>
       </div>
-
-      <MigrationBanner onMigrated={refresh} />
 
       {error ? (
         <div className="mb-6 rounded-[var(--radius-lg)] border border-default bg-surface-2 px-4 py-3 text-sm text-[var(--danger)]">
