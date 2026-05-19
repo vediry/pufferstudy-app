@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MAX_BYTES = 8 * 1024 * 1024; // 8 MB hard cap per upload
-const ALLOWED_PREFIXES = ["image/", "application/pdf"];
+const ALLOWED_PREFIXES = ["image/", "application/pdf", "audio/"];
 
 function isAllowedMime(mime: string): boolean {
   return ALLOWED_PREFIXES.some((p) => (p.endsWith("/") ? mime.startsWith(p) : mime === p));

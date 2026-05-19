@@ -177,6 +177,26 @@ export async function deleteFile(
   if (!res.ok) throw new Error(`deleteFile ${res.status}`);
 }
 
+export async function transcribeFile(
+  fileId: string,
+  apiKey: string,
+): Promise<string> {
+  const res = await fetch("/api/transcribe", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ fileId, apiKey }),
+  });
+  if (!res.ok) {
+    const data = (await res.json().catch(() => ({}))) as {
+      message?: string;
+      error?: string;
+    };
+    throw new Error(data.message ?? data.error ?? `transcribe ${res.status}`);
+  }
+  const data = (await res.json()) as { transcription: string };
+  return data.transcription;
+}
+
 export function useSubjects() {
   const [subjects, setSubjects] = React.useState<Subject[] | null>(null);
   const [error, setError] = React.useState<string | null>(null);

@@ -1,10 +1,17 @@
 "use client";
 
 import * as React from "react";
-import { Upload, Loader2, Camera } from "lucide-react";
+import { Upload, Loader2, Camera, Mic } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { resizeImageBlob } from "@/lib/db";
-import { uploadFile, type SubjectFile } from "@/lib/cloud-subjects";
+import { getSettings } from "@/lib/store";
+import {
+  uploadFile,
+  transcribeFile,
+  updateFileCaption,
+  type SubjectFile,
+} from "@/lib/cloud-subjects";
+import { VoiceRecorder } from "@/components/voice-recorder";
 
 type Props = {
   subjectId: string;
@@ -25,6 +32,7 @@ export function ImageUploader({ subjectId, onUploaded, className }: Props) {
   const [busy, setBusy] = React.useState(false);
   const [drag, setDrag] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [recorderOpen, setRecorderOpen] = React.useState(false);
 
   async function handleFiles(files: FileList | File[]) {
     setError(null);
@@ -60,32 +68,78 @@ export function ImageUploader({ subjectId, onUploaded, className }: Props) {
     }
   }
 
+  async function handleVoiceNote(blob: Blob, durationSec: number) {
+    const apiKey = getSettings().geminiKey;
+    const filename = `voice-note-${Date.now()}.webm`;
+    const file = new File([blob], filename, { type: blob.type || "audio/webm" });
+    const placeholderCaption = `Voice note · ${formatDuration(durationSec)}`;
+
+    const record = await uploadFile(subjectId, file, placeholderCaption);
+    onUploaded([record]);
+
+    if (apiKey) {
+      try {
+        const transcription = await transcribeFile(record.id, apiKey);
+        if (transcription) {
+          await updateFileCaption(subjectId, record.id, transcription);
+          onUploaded([{ ...record, caption: transcription }]);
+        }
+      } catch (err) {
+        console.error("transcription failed:", err);
+        // Leave the placeholder caption; user can edit manually
+      }
+    }
+  }
+
   return (
-    <div className={cn("flex flex-col gap-2", className)}>
-      <label
-        htmlFor="camera-capture-input"
-        className={cn(
-          "inline-flex cursor-pointer items-center justify-center gap-2 rounded-[var(--radius)] border border-default bg-surface-2 px-4 py-2.5 text-sm font-medium text-ink transition-colors",
-          "hover:bg-surface-3 sm:hidden",
-          busy && "pointer-events-none opacity-70",
-        )}
-      >
-        <Camera className="h-[18px] w-[18px]" strokeWidth={1.75} />
-        Take a photo
-        <input
-          id="camera-capture-input"
-          type="file"
-          accept="image/*"
-          capture="environment"
-          className="sr-only"
-          onChange={(e) => {
-            if (e.target.files && e.target.files.length > 0) {
-              handleFiles(e.target.files);
-              e.target.value = "";
-            }
-          }}
+    <div className={cn("flex flex-col gap-3", className)}>
+      <div className="flex flex-wrap gap-2">
+        <label
+          htmlFor="camera-capture-input"
+          className={cn(
+            "inline-flex cursor-pointer items-center justify-center gap-2 rounded-[var(--radius)] border border-default bg-surface-2 px-4 py-2.5 text-sm font-medium text-ink transition-colors",
+            "hover:bg-surface-3 sm:hidden",
+            busy && "pointer-events-none opacity-70",
+          )}
+        >
+          <Camera className="h-[18px] w-[18px]" strokeWidth={1.75} />
+          Take a photo
+          <input
+            id="camera-capture-input"
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="sr-only"
+            onChange={(e) => {
+              if (e.target.files && e.target.files.length > 0) {
+                handleFiles(e.target.files);
+                e.target.value = "";
+              }
+            }}
+          />
+        </label>
+        <button
+          type="button"
+          onClick={() => setRecorderOpen((v) => !v)}
+          className={cn(
+            "inline-flex cursor-pointer items-center justify-center gap-2 rounded-[var(--radius)] border border-default bg-surface-2 px-4 py-2.5 text-sm font-medium text-ink transition-colors",
+            "hover:bg-surface-3",
+            busy && "pointer-events-none opacity-70",
+            recorderOpen && "bg-surface-3 border-strong",
+          )}
+        >
+          <Mic className="h-[18px] w-[18px]" strokeWidth={1.75} />
+          {recorderOpen ? "Hide recorder" : "Record voice note"}
+        </button>
+      </div>
+
+      {recorderOpen ? (
+        <VoiceRecorder
+          onSave={handleVoiceNote}
+          onClose={() => setRecorderOpen(false)}
         />
-      </label>
+      ) : null}
+
       <label
         htmlFor="image-uploader-input"
         onDragOver={(e) => {
@@ -140,4 +194,10 @@ export function ImageUploader({ subjectId, onUploaded, className }: Props) {
       ) : null}
     </div>
   );
+}
+
+function formatDuration(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
 }
