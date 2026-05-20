@@ -1,6 +1,5 @@
 // scripts/migrate-chat-messages.ts
-import dotenv from "dotenv";
-dotenv.config({ path: ".env.local" });
+// Env vars are loaded by `node --env-file=.env.local` in the npm script.
 import { sql } from "@vercel/postgres";
 
 async function main() {
