@@ -1,5 +1,6 @@
 // scripts/migrate-chat-messages.ts
-import "dotenv/config";
+import dotenv from "dotenv";
+dotenv.config({ path: ".env.local" });
 import { sql } from "@vercel/postgres";
 
 async function main() {
