@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { del } from "@vercel/blob";
 import { deleteSubject, getSubjectWithFiles, updateSubject } from "@/lib/subjects-db";
+import type { ChatMessage } from "@/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,6 +34,7 @@ export async function PATCH(
     testLabel?: string | null;
     testDate?: string | null;
     cheatsheetMarkdown?: string | null;
+    chatMessages?: ChatMessage[];
   };
   try {
     body = await req.json();
@@ -45,7 +47,9 @@ export async function PATCH(
     testLabel?: string | null;
     testDate?: string | null;
     cheatsheetMarkdown?: string | null;
+    chatMessages?: ChatMessage[];
   } = {};
+
   if (typeof body.name === "string") {
     const trimmed = body.name.trim();
     if (!trimmed) return NextResponse.json({ error: "name_required" }, { status: 400 });
@@ -60,6 +64,24 @@ export async function PATCH(
   }
   if (body.cheatsheetMarkdown !== undefined) {
     patch.cheatsheetMarkdown = body.cheatsheetMarkdown;
+  }
+  if (body.chatMessages !== undefined) {
+    if (!Array.isArray(body.chatMessages)) {
+      return NextResponse.json({ error: "chat_messages_invalid" }, { status: 400 });
+    }
+    // Light shape validation to keep junk out of the JSONB column.
+    for (const m of body.chatMessages) {
+      if (
+        !m ||
+        typeof m !== "object" ||
+        (m.role !== "user" && m.role !== "assistant") ||
+        typeof m.content !== "string" ||
+        typeof m.ts !== "string"
+      ) {
+        return NextResponse.json({ error: "chat_message_shape" }, { status: 400 });
+      }
+    }
+    patch.chatMessages = body.chatMessages;
   }
 
   const updated = await updateSubject(userId, id, patch);
