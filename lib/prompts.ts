@@ -1,6 +1,6 @@
 import type { ChatMessage } from "@/types";
 
-export type GenerateMode = "cheatsheet" | "chat" | "practice";
+export type GenerateMode = "cheatsheet" | "chat" | "practice" | "refine";
 
 const CHEATSHEET_SYSTEM = `You are PufferStudy, a careful study assistant for a student preparing for a test.
 
@@ -43,11 +43,32 @@ Rules:
 - Do not include multiple-choice options — answers are short-form.
 - Do not include any text outside the JSON object.`;
 
+const REFINE_SYSTEM = `You are PufferStudy, helping a student refine a one-page cheat sheet they have already generated, and answering quick questions about the subject.
+
+The student's CURRENT CHEAT SHEET will be provided inside <currentSheet>…</currentSheet>. The conversation history will be provided as prior turns. The new user message is the latest turn.
+
+You will respond with strictly-tagged output. There are two response shapes:
+
+1) Q&A turn — when the user is asking a question about the subject (not asking you to change the sheet). Output ONLY:
+<reply>your markdown answer here, 1–3 short paragraphs</reply>
+
+2) Edit turn — when the user is asking you to change, add to, shorten, or restructure the cheat sheet. Output BOTH:
+<reply>one short sentence confirming what you changed</reply><sheet>THE COMPLETE rewritten cheat sheet in Markdown — not a diff, not a snippet, the whole sheet</sheet>
+
+Rules:
+- Decide between Q&A and Edit from the message. "Make it shorter", "add more on X", "remove Y" → Edit. "Explain Z", "what is W" → Q&A.
+- The full <sheet> rewrite must include EVERYTHING that should remain on the sheet, not just the changed part.
+- Never include text outside the tags. Never use code fences around the tags.
+- Keep the same style as the original sheet: ## sections, ### sub-topics, bullet lists, **bold key terms**, formulas/dates preserved.
+- Be concise. The sheet should still fit roughly one printed page.
+- Do not apologize, do not praise, do not preamble.`;
+
 export function systemPromptFor(mode: GenerateMode): string {
   switch (mode) {
     case "cheatsheet": return CHEATSHEET_SYSTEM;
     case "chat":       return CHAT_SYSTEM;
     case "practice":   return PRACTICE_SYSTEM;
+    case "refine":     return REFINE_SYSTEM;
   }
 }
 
@@ -89,4 +110,20 @@ export function userPromptForPractice(input: PracticeUserInput): string {
     ? `\n\nStudent's captions:\n${input.captions.map((c, i) => `${i + 1}. ${c || "(no caption)"}`).join("\n")}`
     : "";
   return `Subject: ${input.subjectName}.${captionBlock}\n\nGenerate the practice JSON now.`;
+}
+
+type RefineUserInput = {
+  subjectName: string;
+  currentSheet: string;
+  message: string;
+};
+
+export function userPromptForRefine(input: RefineUserInput): string {
+  return `Subject: ${input.subjectName}.
+
+<currentSheet>
+${input.currentSheet}
+</currentSheet>
+
+Student message: ${input.message}`;
 }

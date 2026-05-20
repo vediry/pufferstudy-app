@@ -5,6 +5,7 @@ import {
   userPromptForCheatsheet,
   userPromptForChat,
   userPromptForPractice,
+  userPromptForRefine,
   type GenerateMode,
 } from "@/lib/prompts";
 import { getFilesByIds } from "@/lib/subjects-db";
@@ -23,6 +24,8 @@ type Body = {
   fileIds: string[];
   question?: string;
   history?: ChatMessage[];
+  currentSheet?: string;   // refine mode only
+  message?: string;        // refine mode only
 };
 
 function bad(status: number, message: string, code = "bad_request") {
@@ -58,8 +61,8 @@ export async function POST(req: Request) {
   if (typeof apiKey !== "string" || apiKey.trim().length < 10) {
     return bad(401, "Missing or invalid API key.", "invalid_key");
   }
-  if (mode !== "cheatsheet" && mode !== "chat" && mode !== "practice") {
-    return bad(400, "Mode must be cheatsheet, chat, or practice.");
+  if (mode !== "cheatsheet" && mode !== "chat" && mode !== "practice" && mode !== "refine") {
+    return bad(400, "Mode must be cheatsheet, chat, practice, or refine.");
   }
   if (typeof subjectName !== "string" || !subjectName.trim()) {
     return bad(400, "subjectName is required.");
@@ -67,37 +70,54 @@ export async function POST(req: Request) {
   if (!Array.isArray(fileIds)) {
     return bad(400, "fileIds must be an array.");
   }
-  if (mode !== "chat" && fileIds.length === 0) {
+  if (mode !== "chat" && mode !== "refine" && fileIds.length === 0) {
     return bad(400, "Add at least one file before generating.");
   }
 
-  // Fetch the files the user owns from DB, then download blobs in parallel
-  const records = await getFilesByIds(userId, fileIds);
-  const captions = records.map((r) => r.caption ?? "");
-  const inlinedFiles = await Promise.all(
-    records.map((r) => blobUrlToBase64(r.blob_url)),
-  );
-  const validFiles = inlinedFiles.filter((f): f is { mimeType: string; data: string } => f !== null);
-
   let userPrompt: string;
-  if (mode === "cheatsheet") {
-    userPrompt = userPromptForCheatsheet({
-      subjectName,
-      testLabel: body.testLabel,
-      captions,
-    });
-  } else if (mode === "practice") {
-    userPrompt = userPromptForPractice({ subjectName, captions });
-  } else {
-    if (typeof body.question !== "string" || !body.question.trim()) {
-      return bad(400, "Chat requires a question.");
+  let validFiles: Array<{ mimeType: string; data: string }> = [];
+  const captions: string[] = [];
+
+  if (mode === "refine") {
+    if (typeof body.currentSheet !== "string" || !body.currentSheet.trim()) {
+      return bad(400, "Refine requires a non-empty currentSheet.");
     }
-    userPrompt = userPromptForChat({
+    if (typeof body.message !== "string" || !body.message.trim()) {
+      return bad(400, "Refine requires a message.");
+    }
+    userPrompt = userPromptForRefine({
       subjectName,
-      question: body.question,
-      history: body.history ?? [],
-      captions,
+      currentSheet: body.currentSheet,
+      message: body.message,
     });
+  } else {
+    // Fetch the files the user owns from DB, then download blobs in parallel
+    const records = await getFilesByIds(userId, fileIds);
+    for (const r of records) captions.push(r.caption ?? "");
+    const inlinedFiles = await Promise.all(
+      records.map((r) => blobUrlToBase64(r.blob_url)),
+    );
+    validFiles = inlinedFiles.filter((f): f is { mimeType: string; data: string } => f !== null);
+
+    if (mode === "cheatsheet") {
+      userPrompt = userPromptForCheatsheet({
+        subjectName,
+        testLabel: body.testLabel,
+        captions,
+      });
+    } else if (mode === "practice") {
+      userPrompt = userPromptForPractice({ subjectName, captions });
+    } else {
+      if (typeof body.question !== "string" || !body.question.trim()) {
+        return bad(400, "Chat requires a question.");
+      }
+      userPrompt = userPromptForChat({
+        subjectName,
+        question: body.question,
+        history: body.history ?? [],
+        captions,
+      });
+    }
   }
 
   const parts: Array<
@@ -113,7 +133,7 @@ export async function POST(req: Request) {
     parts: Array<{ text: string } | { inline_data: { mime_type: string; data: string } }>;
   }> = [];
 
-  if (mode === "chat" && body.history && body.history.length > 0) {
+  if ((mode === "chat" || mode === "refine") && body.history && body.history.length > 0) {
     for (const m of body.history) {
       contents.push({
         role: m.role === "assistant" ? "model" : "user",
