@@ -130,13 +130,13 @@ Layout:
 
 - Message list — sticky-to-bottom on new messages, scrollable. Faint moss-tinted background for assistant bubbles (`#6BBF8A` at low alpha), plain bordered bubbles for user.
 - Input — large multi-line textarea with an arrow-up send button, 24px rounded corners (matching the chat input mockup the user approved).
-- Suggested-prompt chips above the input on empty chat: "Make it shorter", "Add more examples", "Quiz me on this", "Explain [topic] more". Clicking a chip fills the textarea, doesn't auto-send.
+- Suggested-prompt chips above the input on empty chat: "Make it shorter", "Add more examples", "Quiz me on this". Clicking a chip fills the textarea, doesn't auto-send.
 - Below the input, muted hint text: "Powered by your Gemini key".
 
 States:
 
 - **Empty sheet** — input disabled, placeholder reads "Generate the cheat sheet first to start chatting".
-- **Streaming** — send button disabled (no queuing of multiple turns). Streaming reply renders into the latest assistant bubble; if it's an edit turn, the sheet above also rerenders as `<sheet>` content streams or completes (decision deferrable — start with "replace on `onSheetEdit`").
+- **Streaming** — send button disabled (no queuing of multiple turns). Streaming reply renders into the latest assistant bubble; if it's an edit turn, the sheet above replaces atomically on `onSheetEdit` (no live char-by-char rewrite of the canvas — see Out of scope).
 - **Error** — toast for stream failures, mid-tag truncation, or 4xx/5xx from `/api/generate`. Chat state stays consistent: nothing partial is persisted.
 
 ## Persistence flow per turn
@@ -209,6 +209,7 @@ These are largely independent (parser ↔ API ↔ UI), so subagent-driven develo
 - **Model ignoring the tag protocol** — Gemini occasionally drops format instructions. Untagged-as-reply fallback means the worst case for Q&A is "it still works"; for edits it means "the user sees a textual description of the change instead of the sheet updating". Acceptable degradation.
 - **JSONB growth on `subjects`** — at hundreds of messages per subject, the row gets large and every PATCH rewrites the whole array. If this becomes an issue, split to a `chat_messages` table later. Cheap migration when needed.
 - **History cap at 10 turns** — long conversations lose early context. Document this; revisit if users complain.
+- **Gemini context window** — current sheet + last 10 turns + new message is sent every refine call. A dense, multi-page sheet plus long history could approach the model's input limit. Watch for `400` errors from Gemini citing token limits; mitigations if it bites: trim history harder (e.g. last 6 turns), summarize older turns, or warn the user when the sheet exceeds a size threshold. Not pre-engineering this.
 - **No rate limiting** — the user's own Gemini key handles their own quota. Not our concern.
 
 ## Open questions
