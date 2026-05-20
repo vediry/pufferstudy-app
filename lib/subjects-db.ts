@@ -1,5 +1,6 @@
 import "server-only";
 import { sql } from "@vercel/postgres";
+import type { ChatMessage } from "@/types";
 
 export type DbSubject = {
   id: string;
@@ -9,6 +10,7 @@ export type DbSubject = {
   test_date: string | null;
   cheatsheet_markdown: string | null;
   cheatsheet_generated_at: string | null;
+  chat_messages: ChatMessage[];
   created_at: string;
   updated_at: string;
 };
@@ -75,13 +77,15 @@ export async function updateSubject(
     testLabel?: string | null;
     testDate?: string | null;
     cheatsheetMarkdown?: string | null;
+    chatMessages?: ChatMessage[];
   },
 ): Promise<DbSubject | null> {
   const noFields =
     patch.name === undefined &&
     patch.testLabel === undefined &&
     patch.testDate === undefined &&
-    patch.cheatsheetMarkdown === undefined;
+    patch.cheatsheetMarkdown === undefined &&
+    patch.chatMessages === undefined;
 
   if (noFields) {
     const { rows } = await sql<DbSubject>`
@@ -91,6 +95,7 @@ export async function updateSubject(
   }
 
   const cheatsheetTimestamp = patch.cheatsheetMarkdown !== undefined ? new Date().toISOString() : null;
+  const chatJson = patch.chatMessages !== undefined ? JSON.stringify(patch.chatMessages) : null;
 
   const { rows } = await sql<DbSubject>`
     UPDATE subjects
@@ -100,6 +105,7 @@ export async function updateSubject(
       test_date = CASE WHEN ${patch.testDate === undefined ? "no" : "yes"}::text = 'yes' THEN ${patch.testDate ?? null}::date ELSE test_date END,
       cheatsheet_markdown = CASE WHEN ${patch.cheatsheetMarkdown === undefined ? "no" : "yes"}::text = 'yes' THEN ${patch.cheatsheetMarkdown ?? null} ELSE cheatsheet_markdown END,
       cheatsheet_generated_at = CASE WHEN ${patch.cheatsheetMarkdown === undefined ? "no" : "yes"}::text = 'yes' THEN ${cheatsheetTimestamp}::timestamptz ELSE cheatsheet_generated_at END,
+      chat_messages = CASE WHEN ${patch.chatMessages === undefined ? "no" : "yes"}::text = 'yes' THEN ${chatJson}::jsonb ELSE chat_messages END,
       updated_at = now()
     WHERE id = ${subjectId} AND user_id = ${userId}
     RETURNING *

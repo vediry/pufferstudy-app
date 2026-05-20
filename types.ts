@@ -15,6 +15,7 @@ export type ChatMessage = {
   role: "user" | "assistant";
   content: string;
   ts: string;
+  sheetEdited?: boolean;
 };
 
 export type PracticeQ = { q: string; a: string };

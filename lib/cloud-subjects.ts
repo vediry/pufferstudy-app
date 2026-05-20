@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import type { ChatMessage } from "@/types";
 
 export type Subject = {
   id: string;
@@ -9,6 +10,7 @@ export type Subject = {
   testDate: string | null;
   cheatsheetMarkdown: string | null;
   cheatsheetGeneratedAt: string | null;
+  chatMessages: ChatMessage[];
   createdAt: string;
   updatedAt: string;
 };
@@ -32,6 +34,7 @@ type DbSubject = {
   test_date: string | null;
   cheatsheet_markdown: string | null;
   cheatsheet_generated_at: string | null;
+  chat_messages: ChatMessage[];
   created_at: string;
   updated_at: string;
 };
@@ -54,6 +57,7 @@ function mapSubject(row: DbSubject): Subject {
     testDate: row.test_date,
     cheatsheetMarkdown: row.cheatsheet_markdown,
     cheatsheetGeneratedAt: row.cheatsheet_generated_at,
+    chatMessages: row.chat_messages ?? [],
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -111,6 +115,7 @@ export async function updateSubject(
     testLabel?: string | null;
     testDate?: string | null;
     cheatsheetMarkdown?: string | null;
+    chatMessages?: ChatMessage[];
   },
 ): Promise<Subject> {
   const res = await fetch(`/api/subjects/${id}`, {
