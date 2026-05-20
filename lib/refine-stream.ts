@@ -161,3 +161,96 @@ export function capHistory(history: ChatMessage[]): ChatMessage[] {
   if (history.length <= HISTORY_CAP) return history;
   return history.slice(history.length - HISTORY_CAP);
 }
+
+export type RefineHandlers = {
+  onReplyDelta: (text: string) => void;
+  onSheetDelta?: (text: string) => void;
+  onSheetEdit: (full: string) => void;
+  onDone: (args: { replyText: string; sheetEdited: boolean; parserError: string | null }) => void;
+  onError: (message: string, code?: string) => void;
+  signal?: AbortSignal;
+};
+
+type RefineInput = {
+  apiKey: string;
+  subjectId: string;
+  subjectName: string;
+  currentSheet: string;
+  history: ChatMessage[];
+  message: string;
+};
+
+export async function refine(input: RefineInput, handlers: RefineHandlers): Promise<void> {
+  if (!input.apiKey) {
+    handlers.onError("Add your Gemini API key in Settings first.", "missing_key");
+    return;
+  }
+
+  const cappedHistory = capHistory(input.history);
+
+  let replyText = "";
+  let sheetEdited = false;
+  const parser = new TagParser({
+    onReplyDelta: (t) => {
+      replyText += t;
+      handlers.onReplyDelta(t);
+    },
+    onSheetDelta: handlers.onSheetDelta,
+    onSheetEdit: (full) => {
+      sheetEdited = true;
+      handlers.onSheetEdit(full);
+    },
+  });
+
+  let res: Response;
+  try {
+    res = await fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        apiKey: input.apiKey,
+        mode: "refine",
+        subjectName: input.subjectName,
+        fileIds: [],
+        history: cappedHistory,
+        currentSheet: input.currentSheet,
+        message: input.message,
+      }),
+      signal: handlers.signal,
+    });
+  } catch (err) {
+    if ((err as Error).name === "AbortError") return;
+    handlers.onError("Couldn't reach the PufferStudy server. Check your connection.", "network");
+    return;
+  }
+
+  if (!res.ok || !res.body) {
+    let code = "unknown";
+    let message = `Refinement failed (${res.status}).`;
+    try {
+      const json = (await res.json()) as { error?: string; message?: string };
+      if (json.error) code = json.error;
+      if (json.message) message = json.message;
+    } catch {
+      // body wasn't JSON
+    }
+    handlers.onError(message, code);
+    return;
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream: true });
+      if (chunk) parser.write(chunk);
+    }
+    parser.end();
+    handlers.onDone({ replyText, sheetEdited, parserError: parser.error });
+  } catch (err) {
+    if ((err as Error).name === "AbortError") return;
+    handlers.onError("The stream was interrupted. Try again.", "stream_failed");
+  }
+}
