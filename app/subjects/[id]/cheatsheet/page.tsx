@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { ArrowLeft, Printer, FileDown, RefreshCcw, AlertCircle, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CheatsheetView } from "@/components/cheatsheet-view";
+import { CheatsheetChat } from "@/components/cheatsheet-chat";
 import { generate } from "@/lib/gemini-client";
 import { getSettings } from "@/lib/store";
 import { useSubject, updateSubject } from "@/lib/cloud-subjects";
@@ -22,11 +23,14 @@ export default function CheatsheetPage() {
 
   const { subject, setSubject } = useSubject(id);
   const [hasKey, setHasKey] = React.useState<boolean>(false);
+  const [apiKey, setApiKey] = React.useState<string | null>(null);
   const [state, setState] = React.useState<GenState>({ kind: "idle" });
   const abortRef = React.useRef<AbortController | null>(null);
 
   React.useEffect(() => {
-    setHasKey(!!getSettings().geminiKey);
+    const key = getSettings().geminiKey;
+    setHasKey(!!key);
+    setApiKey(key ?? null);
   }, []);
 
   React.useEffect(() => {
@@ -108,6 +112,15 @@ export default function CheatsheetPage() {
       </div>
     );
   }
+
+  // The "live" sheet: whatever the page is currently showing the user.
+  // Generation flow updates `state`; refine flow updates the subject via PATCH.
+  const displayedSheet =
+    state.kind === "done"
+      ? state.markdown
+      : state.kind === "loading"
+        ? state.partial
+        : subject?.cheatsheetMarkdown ?? "";
 
   const showInitialCTA = state.kind === "idle" && !subject.cheatsheetMarkdown;
 
@@ -224,6 +237,38 @@ export default function CheatsheetPage() {
           <CheatsheetView markdown={subject.cheatsheetMarkdown} />
         ) : null
       )}
+
+      {subject && state.kind !== "loading" && displayedSheet.length > 0 ? (
+        <CheatsheetChat
+          subjectId={subject.id}
+          subjectName={subject.name}
+          apiKey={apiKey}
+          currentSheet={displayedSheet}
+          messages={subject.chatMessages}
+          onTurnComplete={async ({ nextMessages, nextSheet }) => {
+            // Optimistic: update local state immediately.
+            const optimistic = {
+              ...subject,
+              chatMessages: nextMessages,
+              ...(nextSheet !== null ? { cheatsheetMarkdown: nextSheet } : {}),
+            };
+            setSubject(optimistic);
+            if (nextSheet !== null) {
+              setState({ kind: "done", markdown: nextSheet });
+            }
+            // Persist atomically.
+            try {
+              const updated = await updateSubject(subject.id, {
+                chatMessages: nextMessages,
+                ...(nextSheet !== null ? { cheatsheetMarkdown: nextSheet } : {}),
+              });
+              setSubject({ ...subject, ...updated, files: subject.files, chatMessages: nextMessages });
+            } catch (err) {
+              console.error("Failed to persist chat turn:", err);
+            }
+          }}
+        />
+      ) : null}
     </div>
   );
 }
