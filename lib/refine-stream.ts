@@ -34,7 +34,6 @@ export class TagParser {
   private state: State = { kind: "start" };
   private buffer = "";
   private sheetBuffer = "";
-  private replyEmittedAny = false;
   public error: string | null = null;
 
   constructor(private h: ParserHandlers) {}
@@ -72,7 +71,6 @@ export class TagParser {
             // No tags at all — model misbehaved. Treat the whole thing as reply text.
             if (this.buffer.length > 0) {
               this.h.onReplyDelta(this.buffer);
-              this.replyEmittedAny = true;
               this.buffer = "";
             }
             return;
@@ -84,7 +82,6 @@ export class TagParser {
         // If the model emitted text before <reply>, also stream it as reply (charitable).
         if (openIdx > 0) {
           this.h.onReplyDelta(this.buffer.slice(0, openIdx));
-          this.replyEmittedAny = true;
         }
         this.buffer = this.buffer.slice(openIdx + REPLY_OPEN.length);
         this.state = { kind: "in_reply" };
@@ -99,14 +96,12 @@ export class TagParser {
           const safe = final ? this.buffer.length : Math.max(0, this.buffer.length - (MAX_TAG_LEN - 1));
           if (safe > 0) {
             this.h.onReplyDelta(this.buffer.slice(0, safe));
-            this.replyEmittedAny = true;
             this.buffer = this.buffer.slice(safe);
           }
           return;
         }
         if (closeIdx > 0) {
           this.h.onReplyDelta(this.buffer.slice(0, closeIdx));
-          this.replyEmittedAny = true;
         }
         this.buffer = this.buffer.slice(closeIdx + REPLY_CLOSE.length);
         this.state = { kind: "between" };
