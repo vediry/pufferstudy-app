@@ -155,6 +155,22 @@ Persistent across the app (lives in `app/layout.tsx`):
 | **Space Grey** | dark | deep graphite + warm cream text + soft gold accent | Manrope | Manrope |
 | **Midnight Library** | dark | navy-black + ivory text + champagne gold accent | Instrument Serif | Manrope |
 
+### Typography rules (apply to all themes)
+
+The Manrope body MUST use weight **500** as default — NOT 400. Manrope 400 reads as thin on most monitors and is hard to scan at distance or for users with vision impairments. Heavier weights stack one step up from typical SaaS defaults:
+
+- Body / paragraphs: `font-weight: 500`, `font-size: 16px`, `line-height: 1.55`.
+- Strong / `<strong>`: `font-weight: 700`.
+- Subject names / card titles (Instrument Serif): `font-weight: 400` (serif faces don't need bumping; 400 reads correctly).
+- Section module titles (uppercase eyebrows): `font-weight: 800`, `letter-spacing: 0.7px`.
+- Badges and urgency pills: `font-weight: 800`.
+- Primary CTAs and buttons: `font-weight: 700`.
+- Secondary nav text / activity text: `font-weight: 500`, never lower.
+
+Apply `-webkit-font-smoothing: antialiased` and `text-rendering: optimizeLegibility` on `body` for crisper rendering at small sizes.
+
+When the Manrope `<link>` is loaded via Next.js's `next/font`, request only the weights actually used: `[500, 600, 700, 800]`. Skipping 400 prevents accidental thin-text regressions.
+
 Full CSS variable values are committed in `lib/themes.ts` and referenced from `app/globals.css` via attribute selectors:
 
 ```css
