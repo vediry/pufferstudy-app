@@ -249,7 +249,7 @@ Today's `app/page.tsx` passes `fileCount={0}` because the subject list endpoint 
 Three icons in a hover-revealed row inside each card's `<scard-meta>` footer:
 
 - **💬 Chat** — links to `/subjects/[id]/cheatsheet` (chat panel is on that page in v2.2).
-- **↻ Regenerate** — kicks off a cheatsheet regenerate via a POST to `/api/generate?mode=cheatsheet` for that subject. Shows a small spinner over the card while in flight. On success, the card's `lastGeneratedAt` updates and a toast confirms.
+- **↻ Regenerate** — kicks off a cheatsheet regenerate via `POST /api/generate` with the same JSON body shape the cheatsheet page sends (`{ mode: "cheatsheet", apiKey, subjectName, fileIds }`). Reads the Gemini key from `getSettings()`; if missing, surfaces a toast prompting the user to add it in Settings rather than starting the request. Shows a small spinner over the card while in flight. On success, persists the new markdown via `PATCH /api/subjects/[id]` (same as the cheatsheet page does today) and a toast confirms.
 - **⊠ Archive** — PATCH archived=true, optimistic UI, toast "Subject archived · Undo".
 
 ## Testing
