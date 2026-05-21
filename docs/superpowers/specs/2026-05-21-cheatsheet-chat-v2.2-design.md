@@ -44,7 +44,7 @@ No DB changes. No new API routes. The `chat_messages` JSONB column from v2.1 is 
 ### Desktop (`≥1024px`)
 
 - Container for the cheatsheet route widens from `max-w-[1120px]` to `max-w-[1280px]`. Other routes keep 1120.
-- Wrap `<CheatsheetView>` and `<CheatsheetChat>` in a flex row with `gap-6`, ratio `3/2` (sheet) and `1` (chat) — a 60/40 split.
+- Wrap `<CheatsheetView>` and `<CheatsheetChat>` in a flex row with `gap-6`. Sheet column gets `flex-[3]`, chat column gets `flex-[2]` — a 60/40 split.
 - Chat column is `sticky top-6 self-start max-h-[calc(100vh-6rem)]` so the input stays in viewport when the user scrolls a long sheet. CSS-only, no scroll JS.
 - Header (back link, regenerate, print buttons) stays above the row, full width.
 - Inside the chat column, drop the existing `max-w-[760px]` centered constraint — the chat fills its column.
