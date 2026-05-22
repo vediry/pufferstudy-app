@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "migrate:chat": "node --env-file=.env.local --import tsx scripts/migrate-chat-messages.ts"
+    "migrate:chat": "node --env-file=.env.local --import tsx scripts/migrate-chat-messages.ts",
+    "migrate:v23": "node --env-file=.env.local --import tsx scripts/migrate-v2.3.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.3.5",
