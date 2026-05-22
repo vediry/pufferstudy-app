@@ -3,25 +3,15 @@
 import * as React from "react";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
-import { useTheme } from "next-themes";
-
-// Use Clerk's `dark` baseTheme for dark + forest (high contrast text on dark bg).
-// Override only colorPrimary so each theme's accent (orange for dark, moss for forest)
-// shows in buttons/links. Don't touch colorText / colorBackground — that broke contrast
-// when we tried tinting the whole modal.
+import { useDeskTheme, THEMES } from "@/components/theme-provider";
 
 export function ClerkThemedProvider({ children }: { children: React.ReactNode }) {
-  const { resolvedTheme } = useTheme();
+  const { themeId } = useDeskTheme();
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
 
-  const theme = mounted ? resolvedTheme : "light";
-  const isDark = theme === "dark" || theme === "forest";
-
-  let colorPrimary: string | undefined;
-  if (theme === "forest") colorPrimary = "#6BBF8A"; // moss
-  else if (theme === "dark") colorPrimary = "#FF7849"; // puffer orange (matches dark)
-  // light: no override, use Clerk's default
+  const theme = mounted ? THEMES.find((t) => t.id === themeId) ?? THEMES[0] : THEMES[0];
+  const isDark = theme.mode === "dark";
 
   return (
     <ClerkProvider
@@ -32,8 +22,8 @@ export function ClerkThemedProvider({ children }: { children: React.ReactNode })
       appearance={{
         baseTheme: isDark ? dark : undefined,
         variables: {
-          fontFamily: "var(--font-spline-sans)",
-          ...(colorPrimary ? { colorPrimary } : {}),
+          fontFamily: "var(--font-manrope)",
+          colorPrimary: theme.css["--accent"],
         },
       }}
     >
