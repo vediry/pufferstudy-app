@@ -162,6 +162,18 @@ export function capHistory(history: ChatMessage[]): ChatMessage[] {
   return history.slice(history.length - HISTORY_CAP);
 }
 
+/**
+ * Returns true if `text` looks like a cheat-sheet rather than a Q&A reply.
+ * Used as the auto-detect heuristic to recover a misformatted edit turn —
+ * see refine() for where it fires. A ## heading at the start of a line is
+ * the strongest signal; 2+ ### subheads also qualify.
+ */
+export function looksLikeSheet(text: string): boolean {
+  const hasH2 = /(^|\n)##\s+\S/.test(text);
+  const subheadCount = (text.match(/(^|\n)###\s+\S/g) || []).length;
+  return hasH2 || subheadCount >= 2;
+}
+
 export type RefineHandlers = {
   onReplyDelta: (text: string) => void;
   onSheetDelta?: (text: string) => void;

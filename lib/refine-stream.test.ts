@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { TagParser, capHistory, type ParserHandlers } from "@/lib/refine-stream";
+import { TagParser, capHistory, looksLikeSheet, type ParserHandlers } from "@/lib/refine-stream";
 import type { ChatMessage } from "@/types";
 
 function makeHandlers() {
@@ -97,5 +97,35 @@ describe("capHistory", () => {
     expect(capped).toHaveLength(10);
     expect(capped[0].content).toBe("m15");
     expect(capped[9].content).toBe("m24");
+  });
+});
+
+describe("looksLikeSheet", () => {
+  it("returns true when the text starts with a ## heading", () => {
+    expect(looksLikeSheet("## Photosynthesis\n- ATP & NADPH")).toBe(true);
+  });
+
+  it("returns true when a ## heading appears on its own line later in the text", () => {
+    expect(looksLikeSheet("Some intro paragraph.\n\n## Section\n- bullet")).toBe(true);
+  });
+
+  it("returns true when there are 2+ ### subheads", () => {
+    expect(looksLikeSheet("### Photosynthesis\nfoo\n### Respiration\nbar")).toBe(true);
+  });
+
+  it("returns false for normal Q&A prose with no headings", () => {
+    expect(looksLikeSheet("NADPH is a reducing agent produced in the light reactions of photosynthesis.")).toBe(false);
+  });
+
+  it("returns false for prose that mentions ## mid-sentence", () => {
+    expect(looksLikeSheet("In markdown you use ## for headings and ### for subheads.")).toBe(false);
+  });
+
+  it("returns false for a single ### subhead (1 is not enough)", () => {
+    expect(looksLikeSheet("### Just one\nfoo")).toBe(false);
+  });
+
+  it("returns false for the empty string", () => {
+    expect(looksLikeSheet("")).toBe(false);
   });
 });
