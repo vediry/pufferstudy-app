@@ -54,7 +54,7 @@ export default function DashboardPage() {
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
           {items.map((subject) => (
-            <SubjectCard key={subject.id} subject={subject} fileCount={0} />
+            <SubjectCard key={subject.id} subject={subject} />
           ))}
         </div>
       )}
