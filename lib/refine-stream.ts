@@ -33,7 +33,7 @@ const MAX_TAG_LEN = Math.max(
 export class TagParser {
   private state: State = { kind: "start" };
   private buffer = "";
-  private sheetBuffer = "";
+  public sheetBuffer = "";
   public error: string | null = null;
 
   constructor(private h: ParserHandlers) {}
@@ -53,7 +53,14 @@ export class TagParser {
       return;
     }
     if (this.state.kind === "in_sheet") {
-      // Sheet never closed — discard partial sheet, surface error.
+      // Sheet never closed. Capture whatever content was buffered under <sheet>
+      // into sheetBuffer so callers (refine() recovery) can inspect/recover it.
+      // Still surface the error — the strict contract is "no onSheetEdit unless
+      // the sheet closed cleanly". Recovery is opt-in by the caller.
+      if (this.buffer.length > 0) {
+        this.sheetBuffer += this.buffer;
+        this.buffer = "";
+      }
       this.error = "Sheet tag was unclosed; sheet edit discarded.";
       this.state = { kind: "done" };
       return;
@@ -260,7 +267,41 @@ export async function refine(input: RefineInput, handlers: RefineHandlers): Prom
       if (chunk) parser.write(chunk);
     }
     parser.end();
-    handlers.onDone({ replyText, sheetEdited, parserError: parser.error });
+
+    // ── Auto-detect: recover sheet-shaped output ────────────────────
+    // Defense-in-depth: if the model misformatted its response, try to
+    // recover the sheet. Three cases:
+    //   (a) clean parse, sheet emitted: pass through unchanged.
+    //   (b) clean parse, no sheet emitted, but reply text looks like a
+    //       sheet: fire onSheetEdit(replyText), replace reply with a
+    //       short confirmation.
+    //   (c) parser error (unclosed <sheet>) and the accumulated sheet
+    //       buffer looks sheet-shaped: fire onSheetEdit(parser.sheetBuffer),
+    //       keep the (cleanly-parsed) reply text as-is, clear the error.
+    let finalReply = replyText;
+    let finalSheetEdited = sheetEdited;
+    let finalParserError = parser.error;
+
+    if (!sheetEdited && looksLikeSheet(replyText)) {
+      handlers.onSheetEdit(replyText);
+      finalSheetEdited = true;
+      finalReply = "Updated the sheet ✓";
+      finalParserError = null;
+    } else if (
+      !sheetEdited &&
+      parser.error &&
+      parser.sheetBuffer.length > 0 &&
+      looksLikeSheet(parser.sheetBuffer)
+    ) {
+      handlers.onSheetEdit(parser.sheetBuffer);
+      finalSheetEdited = true;
+      // Keep the original replyText if non-empty (e.g. "Done."); only
+      // substitute when there's nothing to show.
+      if (!finalReply) finalReply = "Updated the sheet ✓";
+      finalParserError = null;
+    }
+
+    handlers.onDone({ replyText: finalReply, sheetEdited: finalSheetEdited, parserError: finalParserError });
   } catch (err) {
     if ((err as Error).name === "AbortError") return;
     handlers.onError("The stream was interrupted. Try again.", "stream_failed");

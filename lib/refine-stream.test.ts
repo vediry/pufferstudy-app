@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { TagParser, capHistory, looksLikeSheet, type ParserHandlers } from "@/lib/refine-stream";
+import { TagParser, capHistory, looksLikeSheet, refine, type ParserHandlers, type RefineHandlers } from "@/lib/refine-stream";
 import type { ChatMessage } from "@/types";
 
 function makeHandlers() {
@@ -127,5 +127,121 @@ describe("looksLikeSheet", () => {
 
   it("returns false for the empty string", () => {
     expect(looksLikeSheet("")).toBe(false);
+  });
+});
+
+function mockStreamingFetch(body: string) {
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(encoder.encode(body));
+      controller.close();
+    },
+  });
+  return vi.fn(async () => new Response(stream, { status: 200, headers: { "content-type": "text/plain" } }));
+}
+
+function makeRefineHandlers() {
+  return {
+    onReplyDelta: vi.fn<(text: string) => void>(),
+    onSheetDelta: vi.fn<(text: string) => void>(),
+    onSheetEdit: vi.fn<(full: string) => void>(),
+    onDone: vi.fn<(args: { replyText: string; sheetEdited: boolean; parserError: string | null }) => void>(),
+    onError: vi.fn<(message: string, code?: string) => void>(),
+  } satisfies RefineHandlers;
+}
+
+const REFINE_INPUT = {
+  apiKey: "test-key",
+  subjectId: "subj_1",
+  subjectName: "Biology",
+  currentSheet: "## old sheet",
+  history: [],
+  message: "make it shorter",
+};
+
+describe("refine() auto-detect", () => {
+  it("clean reply+sheet response: passes through unchanged", async () => {
+    vi.stubGlobal("fetch", mockStreamingFetch("<reply>Done.</reply><sheet>## New sheet\n- item</sheet>"));
+    const h = makeRefineHandlers();
+    await refine(REFINE_INPUT, h);
+    expect(h.onSheetEdit).toHaveBeenCalledWith("## New sheet\n- item");
+    expect(h.onDone).toHaveBeenCalledWith({
+      replyText: "Done.",
+      sheetEdited: true,
+      parserError: null,
+    });
+    vi.unstubAllGlobals();
+  });
+
+  it("clean reply-only response (Q&A): passes through unchanged", async () => {
+    vi.stubGlobal("fetch", mockStreamingFetch("<reply>NADPH is a reducing agent.</reply>"));
+    const h = makeRefineHandlers();
+    await refine(REFINE_INPUT, h);
+    expect(h.onSheetEdit).not.toHaveBeenCalled();
+    expect(h.onDone).toHaveBeenCalledWith({
+      replyText: "NADPH is a reducing agent.",
+      sheetEdited: false,
+      parserError: null,
+    });
+    vi.unstubAllGlobals();
+  });
+
+  it("auto-detect: <reply> contains the full sheet rewrite — re-routes to onSheetEdit", async () => {
+    const sheetMarkdown = "## Photosynthesis\n- Light reactions\n- Calvin cycle\n\n## Respiration\n- Glycolysis";
+    vi.stubGlobal("fetch", mockStreamingFetch(`<reply>${sheetMarkdown}</reply>`));
+    const h = makeRefineHandlers();
+    await refine(REFINE_INPUT, h);
+    expect(h.onSheetEdit).toHaveBeenCalledWith(sheetMarkdown);
+    expect(h.onDone).toHaveBeenCalledWith({
+      replyText: "Updated the sheet ✓",
+      sheetEdited: true,
+      parserError: null,
+    });
+    vi.unstubAllGlobals();
+  });
+
+  it("auto-detect: untagged sheet-shaped output — re-routes to onSheetEdit, clears any parser error", async () => {
+    const sheetMarkdown = "## Photosynthesis\n- Light reactions\n- Calvin cycle";
+    vi.stubGlobal("fetch", mockStreamingFetch(sheetMarkdown));
+    const h = makeRefineHandlers();
+    await refine(REFINE_INPUT, h);
+    expect(h.onSheetEdit).toHaveBeenCalledWith(sheetMarkdown);
+    expect(h.onDone).toHaveBeenCalledWith({
+      replyText: "Updated the sheet ✓",
+      sheetEdited: true,
+      parserError: null,
+    });
+    vi.unstubAllGlobals();
+  });
+
+  it("auto-detect: unclosed <sheet> tag with sheet-shaped content — recovers, keeps original reply, no parser error surfaced", async () => {
+    const partialSheet = "## Photosynthesis\n- Light reactions\n- Calvin cycle";
+    vi.stubGlobal("fetch", mockStreamingFetch(`<reply>Done.</reply><sheet>${partialSheet}`));
+    const h = makeRefineHandlers();
+    await refine(REFINE_INPUT, h);
+    // Parser would have errored on the unclosed <sheet>, but recovery from the
+    // exposed partialSheet fires onSheetEdit and the error is cleared. The
+    // (already-parsed) reply "Done." is preserved as-is.
+    expect(h.onSheetEdit).toHaveBeenCalledWith(partialSheet);
+    expect(h.onDone).toHaveBeenCalledWith({
+      replyText: "Done.",
+      sheetEdited: true,
+      parserError: null,
+    });
+    vi.unstubAllGlobals();
+  });
+
+  it("plain Q&A prose: no auto-detect, no sheet edit", async () => {
+    vi.stubGlobal("fetch", mockStreamingFetch("<reply>The Krebs cycle happens in the mitochondrial matrix.</reply>"));
+    const h = makeRefineHandlers();
+    await refine(REFINE_INPUT, h);
+    expect(h.onSheetEdit).not.toHaveBeenCalled();
+    expect(h.onDone).toHaveBeenCalledWith({
+      replyText: "The Krebs cycle happens in the mitochondrial matrix.",
+      sheetEdited: false,
+      parserError: null,
+    });
+    vi.unstubAllGlobals();
   });
 });
