@@ -142,8 +142,8 @@ export function CheatsheetChat({
   };
 
   return (
-    <section className="no-print mx-auto mt-10 w-full max-w-[760px]">
-      <h2 className="mb-4 text-sm font-medium text-ink-faint">Chat with this sheet</h2>
+    <section className="no-print w-full mx-auto mt-10 max-w-[760px] border-t border-dashed border-default pt-6 bg-surface-2/30 px-4 -mx-4 lg:mx-0 lg:mt-0 lg:max-w-none lg:border-t-0 lg:border-none lg:bg-transparent lg:px-0">
+      <h2 className="mb-4 text-sm font-medium text-ink-faint">Chat about this sheet</h2>
 
       <div
         ref={listRef}

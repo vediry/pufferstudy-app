@@ -125,7 +125,7 @@ export default function CheatsheetPage() {
   const showInitialCTA = state.kind === "idle" && !subject.cheatsheetMarkdown;
 
   return (
-    <div className="mx-auto w-full max-w-[1120px] px-4 py-10 sm:px-8 sm:py-12">
+    <div className="mx-auto w-full max-w-[1280px] px-4 py-10 sm:px-8 sm:py-12">
       <div className="no-print">
         <Link
           href={`/subjects/${subject.id}`}
@@ -230,45 +230,50 @@ export default function CheatsheetPage() {
           markdown={state.partial || "_Reading your notes…_"}
           className="opacity-95"
         />
-      ) : state.kind === "done" ? (
-        <CheatsheetView markdown={state.markdown} />
       ) : (
-        subject.cheatsheetMarkdown ? (
-          <CheatsheetView markdown={subject.cheatsheetMarkdown} />
-        ) : null
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+          <div className="min-w-0 flex-[3]">
+            {state.kind === "done" ? (
+              <CheatsheetView markdown={state.markdown} />
+            ) : subject.cheatsheetMarkdown ? (
+              <CheatsheetView markdown={subject.cheatsheetMarkdown} />
+            ) : null}
+          </div>
+          {subject && displayedSheet.length > 0 ? (
+            <div className="min-w-0 w-full lg:flex-[2] lg:sticky lg:top-6 lg:self-start lg:max-h-[calc(100vh-6rem)]">
+              <CheatsheetChat
+                subjectId={subject.id}
+                subjectName={subject.name}
+                apiKey={apiKey}
+                currentSheet={displayedSheet}
+                messages={subject.chatMessages}
+                onTurnComplete={async ({ nextMessages, nextSheet }) => {
+                  // Optimistic: update local state immediately.
+                  const optimistic = {
+                    ...subject,
+                    chatMessages: nextMessages,
+                    ...(nextSheet !== null ? { cheatsheetMarkdown: nextSheet } : {}),
+                  };
+                  setSubject(optimistic);
+                  if (nextSheet !== null) {
+                    setState({ kind: "done", markdown: nextSheet });
+                  }
+                  // Persist atomically.
+                  try {
+                    const updated = await updateSubject(subject.id, {
+                      chatMessages: nextMessages,
+                      ...(nextSheet !== null ? { cheatsheetMarkdown: nextSheet } : {}),
+                    });
+                    setSubject({ ...subject, ...updated, files: subject.files, chatMessages: nextMessages });
+                  } catch (err) {
+                    console.error("Failed to persist chat turn:", err);
+                  }
+                }}
+              />
+            </div>
+          ) : null}
+        </div>
       )}
-
-      {subject && state.kind !== "loading" && displayedSheet.length > 0 ? (
-        <CheatsheetChat
-          subjectId={subject.id}
-          subjectName={subject.name}
-          apiKey={apiKey}
-          currentSheet={displayedSheet}
-          messages={subject.chatMessages}
-          onTurnComplete={async ({ nextMessages, nextSheet }) => {
-            // Optimistic: update local state immediately.
-            const optimistic = {
-              ...subject,
-              chatMessages: nextMessages,
-              ...(nextSheet !== null ? { cheatsheetMarkdown: nextSheet } : {}),
-            };
-            setSubject(optimistic);
-            if (nextSheet !== null) {
-              setState({ kind: "done", markdown: nextSheet });
-            }
-            // Persist atomically.
-            try {
-              const updated = await updateSubject(subject.id, {
-                chatMessages: nextMessages,
-                ...(nextSheet !== null ? { cheatsheetMarkdown: nextSheet } : {}),
-              });
-              setSubject({ ...subject, ...updated, files: subject.files, chatMessages: nextMessages });
-            } catch (err) {
-              console.error("Failed to persist chat turn:", err);
-            }
-          }}
-        />
-      ) : null}
     </div>
   );
 }
