@@ -1,10 +1,26 @@
 import type { Metadata, Viewport } from "next";
-import { Spline_Sans, Spline_Sans_Mono } from "next/font/google";
+import { Manrope, Instrument_Serif, Spline_Sans, Spline_Sans_Mono } from "next/font/google";
 import { ClerkThemedProvider } from "@/components/clerk-themed-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Header } from "@/components/header";
 import "./globals.css";
 
+const manrope = Manrope({
+  subsets: ["latin"],
+  weight: ["500", "600", "700", "800"],
+  variable: "--font-manrope",
+  display: "swap",
+});
+
+const instrumentSerif = Instrument_Serif({
+  subsets: ["latin"],
+  weight: ["400"],
+  style: ["normal", "italic"],
+  variable: "--font-instrument-serif",
+  display: "swap",
+});
+
+// Kept until Task 13 removes the legacy Header that references Spline.
 const splineSans = Spline_Sans({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
@@ -38,7 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${splineSans.variable} ${splineSansMono.variable}`}
+      className={`${manrope.variable} ${instrumentSerif.variable} ${splineSans.variable} ${splineSansMono.variable}`}
     >
       <body className="min-h-dvh bg-canvas text-ink">
         <ThemeProvider
