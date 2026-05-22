@@ -11,9 +11,12 @@ export type DbSubject = {
   cheatsheet_markdown: string | null;
   cheatsheet_generated_at: string | null;
   chat_messages: ChatMessage[];
+  archived: boolean;
   created_at: string;
   updated_at: string;
 };
+
+export type DbSubjectWithFileCount = DbSubject & { file_count: number };
 
 export type DbFile = {
   id: string;
@@ -29,9 +32,18 @@ export type DbFile = {
 
 export type SubjectWithFiles = DbSubject & { files: DbFile[] };
 
-export async function listSubjects(userId: string): Promise<DbSubject[]> {
-  const { rows } = await sql<DbSubject>`
-    SELECT * FROM subjects WHERE user_id = ${userId} ORDER BY updated_at DESC
+export async function listSubjects(userId: string): Promise<DbSubjectWithFileCount[]> {
+  const { rows } = await sql<DbSubjectWithFileCount>`
+    SELECT
+      s.id, s.user_id, s.name, s.test_label, s.test_date,
+      s.cheatsheet_markdown, s.cheatsheet_generated_at,
+      s.chat_messages, s.archived, s.created_at, s.updated_at,
+      COALESCE(COUNT(f.id), 0)::int AS file_count
+    FROM subjects s
+    LEFT JOIN files f ON f.subject_id = s.id
+    WHERE s.user_id = ${userId}
+    GROUP BY s.id
+    ORDER BY s.updated_at DESC
   `;
   return rows;
 }
@@ -78,6 +90,7 @@ export async function updateSubject(
     testDate?: string | null;
     cheatsheetMarkdown?: string | null;
     chatMessages?: ChatMessage[];
+    archived?: boolean;
   },
 ): Promise<DbSubject | null> {
   const noFields =
@@ -85,7 +98,8 @@ export async function updateSubject(
     patch.testLabel === undefined &&
     patch.testDate === undefined &&
     patch.cheatsheetMarkdown === undefined &&
-    patch.chatMessages === undefined;
+    patch.chatMessages === undefined &&
+    patch.archived === undefined;
 
   if (noFields) {
     const { rows } = await sql<DbSubject>`
@@ -106,6 +120,7 @@ export async function updateSubject(
       cheatsheet_markdown = CASE WHEN ${patch.cheatsheetMarkdown === undefined ? "no" : "yes"}::text = 'yes' THEN ${patch.cheatsheetMarkdown ?? null} ELSE cheatsheet_markdown END,
       cheatsheet_generated_at = CASE WHEN ${patch.cheatsheetMarkdown === undefined ? "no" : "yes"}::text = 'yes' THEN ${cheatsheetTimestamp}::timestamptz ELSE cheatsheet_generated_at END,
       chat_messages = CASE WHEN ${patch.chatMessages === undefined ? "no" : "yes"}::text = 'yes' THEN ${chatJson}::jsonb ELSE chat_messages END,
+      archived = CASE WHEN ${patch.archived === undefined ? "no" : "yes"}::text = 'yes' THEN ${patch.archived ?? false}::boolean ELSE archived END,
       updated_at = now()
     WHERE id = ${subjectId} AND user_id = ${userId}
     RETURNING *
