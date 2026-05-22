@@ -11,6 +11,8 @@ export type Subject = {
   cheatsheetMarkdown: string | null;
   cheatsheetGeneratedAt: string | null;
   chatMessages: ChatMessage[];
+  archived: boolean;
+  fileCount: number;
   createdAt: string;
   updatedAt: string;
 };
@@ -35,6 +37,8 @@ type DbSubject = {
   cheatsheet_markdown: string | null;
   cheatsheet_generated_at: string | null;
   chat_messages: ChatMessage[];
+  archived: boolean;
+  file_count?: number;
   created_at: string;
   updated_at: string;
 };
@@ -58,6 +62,8 @@ function mapSubject(row: DbSubject): Subject {
     cheatsheetMarkdown: row.cheatsheet_markdown,
     cheatsheetGeneratedAt: row.cheatsheet_generated_at,
     chatMessages: row.chat_messages ?? [],
+    archived: row.archived ?? false,
+    fileCount: row.file_count ?? 0,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -116,6 +122,7 @@ export async function updateSubject(
     testDate?: string | null;
     cheatsheetMarkdown?: string | null;
     chatMessages?: ChatMessage[];
+    archived?: boolean;
   },
 ): Promise<Subject> {
   const res = await fetch(`/api/subjects/${id}`, {
@@ -126,6 +133,10 @@ export async function updateSubject(
   if (!res.ok) throw new Error(`updateSubject ${res.status}`);
   const data = (await res.json()) as { subject: DbSubject };
   return mapSubject(data.subject);
+}
+
+export async function archiveSubject(id: string, archived: boolean): Promise<Subject> {
+  return updateSubject(id, { archived });
 }
 
 export async function deleteSubject(id: string): Promise<void> {
