@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Manrope, Instrument_Serif, Spline_Sans, Spline_Sans_Mono } from "next/font/google";
+import { Manrope, Instrument_Serif } from "next/font/google";
 import { ClerkThemedProvider } from "@/components/clerk-themed-provider";
 import { ThemeProvider, ThemeAntiFlashScript } from "@/components/theme-provider";
-import { Header } from "@/components/header";
+import { AppBar } from "@/components/app-bar";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -20,32 +20,17 @@ const instrumentSerif = Instrument_Serif({
   display: "swap",
 });
 
-// Kept until Task 13 removes the legacy Header that references Spline.
-const splineSans = Spline_Sans({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-spline-sans",
-  display: "swap",
-});
-
-const splineSansMono = Spline_Sans_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-spline-sans-mono",
-  display: "swap",
-});
-
 export const metadata: Metadata = {
-  title: "PufferStudy — Turn your notes into a cheat sheet",
+  title: "PufferStudy — Your study workspace",
   description:
-    "Upload photos of your homework and notes. PufferStudy organizes them and helps you study before a test.",
+    "Per-subject hub for notes, cheat sheets, chat, assignments, and more.",
   applicationName: "PufferStudy",
 };
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#FBF7EE" },
-    { media: "(prefers-color-scheme: dark)", color: "#1A1814" },
+    { media: "(prefers-color-scheme: light)", color: "#faf6ec" },
+    { media: "(prefers-color-scheme: dark)", color: "#1c1b18" },
   ],
 };
 
@@ -54,19 +39,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${manrope.variable} ${instrumentSerif.variable} ${splineSans.variable} ${splineSansMono.variable}`}
+      data-theme="atelier"
+      className={`${manrope.variable} ${instrumentSerif.variable}`}
     >
       <head>
         <ThemeAntiFlashScript />
       </head>
-      <body className="min-h-dvh bg-canvas text-ink">
+      <body className="min-h-dvh">
         <ThemeProvider>
           <ClerkThemedProvider>
             <div className="flex min-h-dvh flex-col">
-              <Header />
+              <AppBar />
               <main className="flex-1">{children}</main>
-              <footer className="mt-auto border-t border-default py-6 text-center text-sm text-ink-faint">
-                <span className="mx-auto">PufferStudy · Your notes, organized.</span>
+              <footer className="no-print mt-auto border-t border-default py-6 text-center text-sm text-ink-faint">
+                <span className="mx-auto">PufferStudy · Your study workspace.</span>
               </footer>
             </div>
           </ClerkThemedProvider>
