@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope, Instrument_Serif, Spline_Sans, Spline_Sans_Mono } from "next/font/google";
 import { ClerkThemedProvider } from "@/components/clerk-themed-provider";
-import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeProvider, ThemeAntiFlashScript } from "@/components/theme-provider";
 import { Header } from "@/components/header";
 import "./globals.css";
 
@@ -56,13 +56,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
       className={`${manrope.variable} ${instrumentSerif.variable} ${splineSans.variable} ${splineSansMono.variable}`}
     >
+      <head>
+        <ThemeAntiFlashScript />
+      </head>
       <body className="min-h-dvh bg-canvas text-ink">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          themes={["light", "dark", "forest"]}
-          disableTransitionOnChange
-        >
+        <ThemeProvider>
           <ClerkThemedProvider>
             <div className="flex min-h-dvh flex-col">
               <Header />
