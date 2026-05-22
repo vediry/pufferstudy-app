@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { createSubject, listSubjects } from "@/lib/subjects-db";
+import { logActivity } from "@/lib/activity";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,6 +34,12 @@ export async function POST(req: Request) {
       name,
       testLabel: body.testLabel?.toString().trim() || null,
       testDate: body.testDate?.toString().trim() || null,
+    });
+    void logActivity({
+      userId,
+      subjectId: subject.id,
+      type: "subject_created",
+      data: { name: subject.name },
     });
     return NextResponse.json({ subject });
   } catch (err) {

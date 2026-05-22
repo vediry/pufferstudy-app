@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { put } from "@vercel/blob";
 import { createFile, ownsSubject } from "@/lib/subjects-db";
+import { logActivity } from "@/lib/activity";
 import { randomUUID } from "node:crypto";
 
 export const runtime = "nodejs";
@@ -76,6 +77,12 @@ export async function POST(
       blobPath,
       mimeType: file.type,
       caption,
+    });
+    void logActivity({
+      userId,
+      subjectId,
+      type: "files_uploaded",
+      data: { count: 1, mimeType: file.type },
     });
     return NextResponse.json({ file: record });
   } catch (err) {

@@ -9,6 +9,7 @@ import {
   type GenerateMode,
 } from "@/lib/prompts";
 import { getFilesByIds } from "@/lib/subjects-db";
+import { logActivity } from "@/lib/activity";
 import type { ChatMessage } from "@/types";
 
 export const runtime = "nodejs";
@@ -20,6 +21,7 @@ type Body = {
   apiKey: string;
   mode: GenerateMode;
   subjectName: string;
+  subjectId?: string;      // present for cheatsheet/refine; optional for chat
   testLabel?: string;
   fileIds: string[];
   question?: string;
@@ -72,6 +74,15 @@ export async function POST(req: Request) {
   }
   if (mode !== "chat" && mode !== "refine" && fileIds.length === 0) {
     return bad(400, "Add at least one file before generating.");
+  }
+
+  if (mode === "cheatsheet") {
+    void logActivity({
+      userId,
+      subjectId: body.subjectId ?? null,
+      type: "cheatsheet_generated",
+      data: { sourceFileCount: fileIds.length },
+    });
   }
 
   let userPrompt: string;

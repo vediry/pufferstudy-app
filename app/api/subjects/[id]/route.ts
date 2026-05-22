@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { del } from "@vercel/blob";
 import { deleteSubject, getSubjectWithFiles, updateSubject } from "@/lib/subjects-db";
+import { logActivity } from "@/lib/activity";
 import type { ChatMessage } from "@/types";
 
 export const runtime = "nodejs";
@@ -94,6 +95,24 @@ export async function PATCH(
 
   const updated = await updateSubject(userId, id, patch);
   if (!updated) return NextResponse.json({ error: "not_found" }, { status: 404 });
+
+  if (patch.chatMessages && patch.chatMessages.length > 0) {
+    const last = patch.chatMessages[patch.chatMessages.length - 1];
+    const userMsg = patch.chatMessages
+      .slice()
+      .reverse()
+      .find((m) => m.role === "user");
+    if (last.role === "assistant" && userMsg) {
+      const topic = userMsg.content.split(/\s+/).slice(0, 6).join(" ");
+      void logActivity({
+        userId,
+        subjectId: updated.id,
+        type: last.sheetEdited ? "cheatsheet_refined" : "chat_question",
+        data: { topic },
+      });
+    }
+  }
+
   return NextResponse.json({ subject: updated });
 }
 
