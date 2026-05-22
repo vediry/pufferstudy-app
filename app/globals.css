@@ -1,101 +1,130 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:is(.dark *));
-
 @theme {
-  /* Brand — pufferfish orange */
-  --color-puffer-50: #FFF4EE;
-  --color-puffer-100: #FFE2D2;
-  --color-puffer-200: #FFC4A6;
-  --color-puffer-300: #FFA988;
-  --color-puffer-400: #FF9466;
-  --color-puffer-500: #FF7849;
-  --color-puffer-600: #E85A2A;
-  --color-puffer-700: #B73E15;
-
-  /* Notebook surfaces — semantic tokens are set via :root below */
-
   --radius-sm: 6px;
   --radius: 12px;
   --radius-lg: 16px;
   --radius-xl: 24px;
 
-  --font-sans: var(--font-spline-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-spline-sans-mono), ui-monospace, "SF Mono", Menlo, monospace;
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 }
 
 @layer base {
-  :root {
-    /* Semantic tokens — light mode (Notebook direction) */
-    --bg: #FBF7EE;
-    --surface: #FFFFFF;
-    --surface-2: #F4EEDF;
-    --surface-3: #EDE4CD;
-    --border: #E8DEC8;
-    --border-strong: #D5C5A3;
-    --ink: #1F1B16;
-    --ink-muted: #5C5044;
-    --ink-faint: #8B7E6C;
-    --primary: #FF7849;
-    --primary-hover: #FF9466;
-    --primary-active: #E85A2A;
-    --primary-foreground: #FFFFFF;
-    --ring: rgba(255, 120, 73, 0.4);
+  /* Default theme = Gold Atelier (matches lib/themes.ts) */
+  :root,
+  [data-theme="atelier"] {
+    --bg: #faf6ec;
+    --bg-grad-top: #faf6ec;
+    --bg-grad-bottom: #f3ecd9;
+    --surface: #fffaef;
+    --surface-2: #f5edd6;
+    --surface-3: #ece1c0;
+    --border: #d8c89c;
+    --border-strong: #c9a96e;
+    --ink: #2c241a;
+    --ink-muted: #6b5d44;
+    --ink-faint: #9c8d70;
+    --accent: #b08842;
+    --accent-light: #d4b06e;
+    --accent-deep: #8c6a30;
+    --primary: #b08842;
+    --primary-hover: #d4b06e;
+    --primary-active: #8c6a30;
+    --primary-foreground: #fffaef;
+    --ring: rgba(176, 136, 66, 0.4);
     --success: #3B8C4F;
-    --warning: #C97A1A;
-    --danger: #C0392B;
+    --warning: #a8531e;
+    --danger: #8c2a1f;
     --info: #3578C9;
-
-    --shadow-sm: 0 1px 2px rgba(63, 44, 24, 0.06);
-    --shadow: 0 4px 12px rgba(63, 44, 24, 0.08), 0 1px 3px rgba(63, 44, 24, 0.04);
-    --shadow-lg: 0 12px 32px rgba(63, 44, 24, 0.10), 0 4px 8px rgba(63, 44, 24, 0.06);
+    --shadow-sm: 0 1px 2px rgba(140, 106, 48, 0.08);
+    --shadow: 0 4px 12px rgba(140, 106, 48, 0.10), 0 1px 3px rgba(140, 106, 48, 0.06);
+    --shadow-lg: 0 12px 32px rgba(140, 106, 48, 0.14), 0 4px 8px rgba(140, 106, 48, 0.08);
   }
 
-  .dark {
-    --bg: #1A1814;
-    --surface: #231F1A;
-    --surface-2: #2C2722;
-    --surface-3: #36302A;
-    --border: #3A332C;
-    --border-strong: #52483D;
-    --ink: #F5EFE2;
-    --ink-muted: #A89B86;
-    --ink-faint: #7A6F60;
-    --primary: #FF7849;
-    --primary-hover: #FF9466;
-    --primary-active: #E85A2A;
-    --primary-foreground: #1F1B16;
-    --ring: rgba(255, 120, 73, 0.5);
-    --success: #5EBD75;
-    --warning: #E89940;
-    --danger: #E66053;
-    --info: #6BA6E5;
+  [data-theme="platinum"] {
+    --bg: #fafbfc;
+    --bg-grad-top: #fafbfc;
+    --bg-grad-bottom: #eceff3;
+    --surface: #ffffff;
+    --surface-2: #f1f3f5;
+    --surface-3: #e0e4e9;
+    --border: #d1d5db;
+    --border-strong: #9ca3af;
+    --ink: #1d242c;
+    --ink-muted: #4b5563;
+    --ink-faint: #6b7480;
+    --accent: #4a5159;
+    --accent-light: #9ca3af;
+    --accent-deep: #2a2f37;
+    --primary: #2a2f37;
+    --primary-hover: #4a5159;
+    --primary-active: #1d242c;
+    --primary-foreground: #fafbfc;
+    --ring: rgba(74, 81, 89, 0.4);
+    --success: #047857;
+    --warning: #b45309;
+    --danger: #991b1b;
+    --info: #1e40af;
+    --shadow-sm: 0 1px 2px rgba(29, 36, 44, 0.05);
+    --shadow: 0 4px 12px rgba(29, 36, 44, 0.08), 0 1px 3px rgba(29, 36, 44, 0.04);
+    --shadow-lg: 0 12px 32px rgba(29, 36, 44, 0.12), 0 4px 8px rgba(29, 36, 44, 0.06);
+  }
 
+  [data-theme="spacegrey"] {
+    --bg: #1c1b18;
+    --bg-grad-top: #2a2926;
+    --bg-grad-bottom: #1c1b18;
+    --surface: #2f2d29;
+    --surface-2: #3a3833;
+    --surface-3: #4a473f;
+    --border: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.18);
+    --ink: #ece6d7;
+    --ink-muted: #bab2a0;
+    --ink-faint: #8a8478;
+    --accent: #c9a96e;
+    --accent-light: #d4b78a;
+    --accent-deep: #a8884c;
+    --primary: #c9a96e;
+    --primary-hover: #d4b78a;
+    --primary-active: #a8884c;
+    --primary-foreground: #1c1b18;
+    --ring: rgba(201, 169, 110, 0.4);
+    --success: #5EBD75;
+    --warning: #e89940;
+    --danger: #ff9d8e;
+    --info: #6BA6E5;
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
     --shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
   }
 
-  .forest {
-    --bg: #0E1A14;
-    --surface: #16241C;
-    --surface-2: #1B2E23;
-    --surface-3: #22382B;
-    --border: rgba(143, 179, 155, 0.14);
-    --border-strong: rgba(143, 179, 155, 0.24);
-    --ink: #EDE8DA;
-    --ink-muted: #8FB39B;
-    --ink-faint: #5F7A68;
-    --primary: #6BBF8A;
-    --primary-hover: #84CFA0;
-    --primary-active: #52A672;
-    --primary-foreground: #0E1A14;
-    --ring: rgba(107, 191, 138, 0.50);
+  [data-theme="midnight"] {
+    --bg: #0e1320;
+    --bg-grad-top: #0e1320;
+    --bg-grad-bottom: #060912;
+    --surface: #161e30;
+    --surface-2: #1b2538;
+    --surface-3: #243049;
+    --border: rgba(212, 183, 138, 0.12);
+    --border-strong: rgba(212, 183, 138, 0.3);
+    --ink: #ece1c8;
+    --ink-muted: #bdb39a;
+    --ink-faint: #8a8a82;
+    --accent: #d4b78a;
+    --accent-light: #e6cba0;
+    --accent-deep: #a89060;
+    --primary: #d4b78a;
+    --primary-hover: #e6cba0;
+    --primary-active: #a89060;
+    --primary-foreground: #0e1320;
+    --ring: rgba(212, 183, 138, 0.4);
     --success: #7FD49A;
-    --warning: #A8AFA6;
-    --danger: #C76B5C;
+    --warning: #e89940;
+    --danger: #ff9d8e;
     --info: #8FB39B;
-
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
     --shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
@@ -106,12 +135,19 @@
   }
 
   html, body {
-    background-color: var(--bg);
+    background:
+      radial-gradient(ellipse at top left, rgba(176,136,66,0.06), transparent 60%),
+      linear-gradient(180deg, var(--bg-grad-top) 0%, var(--bg-grad-bottom) 100%);
+    background-attachment: fixed;
     color: var(--ink);
     font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 1.55;
     font-feature-settings: "ss01", "cv11";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   body {
@@ -119,12 +155,14 @@
     min-height: 100dvh;
   }
 
+  strong { font-weight: 700; }
+
   /* Numeric values get tabular nums by default */
   .tabular { font-variant-numeric: tabular-nums; }
 
   /* Focus ring */
   :focus-visible {
-    outline: 2px solid var(--primary);
+    outline: 2px solid var(--accent);
     outline-offset: 2px;
     border-radius: 4px;
   }
