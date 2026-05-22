@@ -35,6 +35,7 @@ export async function PATCH(
     testDate?: string | null;
     cheatsheetMarkdown?: string | null;
     chatMessages?: ChatMessage[];
+    archived?: boolean;
   };
   try {
     body = await req.json();
@@ -48,6 +49,7 @@ export async function PATCH(
     testDate?: string | null;
     cheatsheetMarkdown?: string | null;
     chatMessages?: ChatMessage[];
+    archived?: boolean;
   } = {};
 
   if (typeof body.name === "string") {
@@ -82,6 +84,12 @@ export async function PATCH(
       }
     }
     patch.chatMessages = body.chatMessages;
+  }
+  if (body.archived !== undefined) {
+    if (typeof body.archived !== "boolean") {
+      return NextResponse.json({ error: "archived_must_be_boolean" }, { status: 400 });
+    }
+    patch.archived = body.archived;
   }
 
   const updated = await updateSubject(userId, id, patch);
