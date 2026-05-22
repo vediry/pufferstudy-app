@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { refine } from "@/lib/refine-stream";
 import type { ChatMessage } from "@/types";
 
+const BUBBLE_CAP_PX = 224; // ~14rem
+
 const SUGGESTED_PROMPTS = [
   "Make it shorter",
   "Add more examples",
@@ -159,11 +161,13 @@ export function CheatsheetChat({
 
         {status.kind === "streaming" ? (
           <div className="rounded-[var(--radius-md)] bg-[var(--primary)]/8 px-3 py-2 text-sm text-ink">
-            <div className="prose prose-sm max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {status.pendingAssistant || "_Thinking…_"}
-              </ReactMarkdown>
-            </div>
+            <CappedBubble>
+              <div className="prose prose-sm max-w-none">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {status.pendingAssistant || "_Thinking…_"}
+                </ReactMarkdown>
+              </div>
+            </CappedBubble>
           </div>
         ) : null}
 
@@ -225,6 +229,48 @@ export function CheatsheetChat({
   );
 }
 
+function CappedBubble({ children, fixedExpanded = false }: { children: React.ReactNode; fixedExpanded?: boolean }) {
+  const ref = React.useRef<HTMLDivElement | null>(null);
+  const [overflows, setOverflows] = React.useState(false);
+  const [expanded, setExpanded] = React.useState(false);
+
+  React.useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    setOverflows(el.scrollHeight > el.clientHeight + 1);
+  });
+
+  const isExpanded = fixedExpanded || expanded;
+  return (
+    <div className="relative">
+      <div
+        ref={ref}
+        style={isExpanded ? undefined : { maxHeight: `${BUBBLE_CAP_PX}px` }}
+        className={cn("overflow-hidden", isExpanded ? "" : "")}
+      >
+        {children}
+      </div>
+      {!isExpanded && overflows ? (
+        <>
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-12"
+            style={{
+              background: "linear-gradient(180deg, rgba(255,255,255,0) 0%, var(--primary-bg-fade, rgba(107,191,138,0.12)) 100%)",
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            className="absolute bottom-1 left-3 rounded-full border border-[var(--primary)]/30 bg-surface-2 px-2 py-0.5 text-[11px] font-semibold text-[var(--primary)] hover:bg-surface"
+          >
+            Show more ▾
+          </button>
+        </>
+      ) : null}
+    </div>
+  );
+}
+
 function MessageBubble({ message }: { message: ChatMessage }) {
   if (message.role === "user") {
     return (
@@ -235,9 +281,11 @@ function MessageBubble({ message }: { message: ChatMessage }) {
   }
   return (
     <div className="rounded-[var(--radius-md)] bg-[var(--primary)]/8 px-3 py-2 text-sm text-ink">
-      <div className="prose prose-sm max-w-none">
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
-      </div>
+      <CappedBubble>
+        <div className="prose prose-sm max-w-none">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+        </div>
+      </CappedBubble>
       {message.sheetEdited ? (
         <p className="mt-1 text-[11px] text-ink-faint">Sheet updated above.</p>
       ) : null}
