@@ -199,21 +199,32 @@
   .shadow-card    { box-shadow: var(--shadow); }
   .shadow-lifted  { box-shadow: var(--shadow-lg); }
 
-  /* Soft glowing card outline that responds to the active theme's accent.
-     Pairs with `border border-default` already on the cards. */
+  /* Hover-driven glow ring. Default is nearly flat; hovering lights up a
+     warm accent-colored outline + diffuse halo around the box. Pairs with
+     existing `border border-default`. */
   .glow-card {
     border-radius: 14px;
-    box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--accent) 12%, transparent),
-      0 1px 2px color-mix(in srgb, var(--accent) 8%, transparent),
-      0 0 24px -8px color-mix(in srgb, var(--accent) 25%, transparent);
-    transition: box-shadow 220ms ease, transform 220ms ease;
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--ink) 4%, transparent);
+    transition: box-shadow 260ms ease, border-color 260ms ease, transform 260ms ease;
   }
   .glow-card:hover {
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
     box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--accent) 32%, transparent),
-      0 2px 4px color-mix(in srgb, var(--accent) 12%, transparent),
-      0 0 36px -6px color-mix(in srgb, var(--accent) 45%, transparent);
+      /* Hard 1px ring at full accent */
+      0 0 0 1px color-mix(in srgb, var(--accent) 75%, transparent),
+      /* Tight inner glow */
+      0 0 18px -2px color-mix(in srgb, var(--accent) 50%, transparent),
+      /* Wide diffuse halo */
+      0 0 60px -8px color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+  /* Same hover treatment for buttons/badges that opt in. */
+  .glow-on-hover {
+    transition: box-shadow 220ms ease, border-color 220ms ease;
+  }
+  .glow-on-hover:hover {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--accent) 65%, transparent),
+      0 0 14px -2px color-mix(in srgb, var(--accent) 45%, transparent);
   }
 
   /* Pill-shaped badge variant — used for theme/version chips with subtle outline */
