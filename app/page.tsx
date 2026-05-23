@@ -3,74 +3,89 @@
 import * as React from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
+import { useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
-import { SubjectCard } from "@/components/subject-card";
-import { DashboardEmptyState } from "@/components/empty-state";
+import { TodayPanel } from "@/components/today-panel";
+import { ActivityFeed } from "@/components/activity-feed";
+import { UpcomingTimeline } from "@/components/upcoming-timeline";
+import { SubjectsGrid } from "@/components/subjects-grid";
 import { useSubjects } from "@/lib/cloud-subjects";
 
-export default function DashboardPage() {
-  const { subjects, error, refresh } = useSubjects();
+export default function DeskPage() {
+  const { subjects: loaded, error, refresh } = useSubjects();
+  const { user } = useUser();
+
+  // Local mirror so optimistic archive updates don't wait for refresh.
+  const [subjects, setSubjects] = React.useState<typeof loaded>(loaded);
+  React.useEffect(() => { setSubjects(loaded); }, [loaded]);
 
   React.useEffect(() => {
-    function onFocus() {
-      refresh();
-    }
+    function onFocus() { refresh(); }
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
   }, [refresh]);
 
   const ready = subjects !== null;
   const items = subjects ?? [];
+  const activeCount = items.filter((s) => !s.archived).length;
+
+  const greetingName = user?.firstName ?? "back";
+  const focus = items.find((s) => !s.archived && s.testDate);
+  const focusSummary = focus ? ` · ${focus.name} test soon` : "";
 
   return (
-    <div className="mx-auto w-full max-w-[1120px] px-4 py-10 sm:px-8 sm:py-12">
-      <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex flex-col gap-1.5">
-          <h1 className="text-[2rem] font-bold leading-[1.15] tracking-tight text-ink sm:text-[2.25rem]">
-            Your study desk
+    <div className="mx-auto w-full max-w-[1280px] px-4 py-10 sm:px-8 sm:py-12">
+      <header className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex flex-col gap-1">
+          <h1
+            className="text-[2rem] leading-tight tracking-tight text-ink sm:text-[2.4rem]"
+            style={{ fontFamily: "var(--font-serif)", fontWeight: 400 }}
+          >
+            Welcome back,{" "}
+            <span className="italic" style={{ color: "var(--accent-deep)" }}>
+              {greetingName}
+            </span>
           </h1>
-          <p className="text-[15px] text-ink-muted sm:text-base">
-            Each subject collects the photos and notes for one class or unit.
+          <p className="text-sm text-ink-muted sm:text-base">
+            Your study desk · {activeCount} active {activeCount === 1 ? "subject" : "subjects"}{focusSummary}
           </p>
         </div>
         <Button asChild size="lg">
           <Link href="/subjects/new">
-            <Plus />
+            <Plus className="h-4 w-4" strokeWidth={1.75} />
             New subject
           </Link>
         </Button>
-      </div>
+      </header>
 
       {error ? (
-        <div className="mb-6 rounded-[var(--radius-lg)] border border-default bg-surface-2 px-4 py-3 text-sm text-[var(--danger)]">
+        <div className="mb-6 border border-[color:var(--danger)]/40 bg-[color:var(--danger)]/10 px-4 py-3 text-sm text-[color:var(--danger)]">
           {error}
         </div>
       ) : null}
 
       {!ready ? (
-        <SubjectSkeletonGrid />
-      ) : items.length === 0 ? (
-        <DashboardEmptyState />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start">
+          <div className="h-[400px] animate-pulse bg-surface-2/60 lg:col-span-1" />
+          <div className="h-[400px] animate-pulse bg-surface-2/60 lg:col-span-2" />
+        </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
-          {items.map((subject) => (
-            <SubjectCard key={subject.id} subject={subject} />
-          ))}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start">
+          <aside className="flex flex-col gap-4 lg:sticky lg:top-24 lg:col-span-1 lg:self-start lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
+            <TodayPanel subjects={items} />
+            <ActivityFeed />
+          </aside>
+          <section className="flex flex-col gap-4 lg:col-span-2">
+            <UpcomingTimeline subjects={items} />
+            <SubjectsGrid
+              subjects={items}
+              onSubjectsChange={(updater) =>
+                setSubjects((prev) => (prev ? updater(prev) : prev))
+              }
+            />
+          </section>
         </div>
       )}
-    </div>
-  );
-}
-
-function SubjectSkeletonGrid() {
-  return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
-      {[0, 1, 2].map((i) => (
-        <div
-          key={i}
-          className="h-[148px] animate-pulse rounded-[var(--radius-lg)] border border-default bg-surface-2/60"
-        />
-      ))}
     </div>
   );
 }
