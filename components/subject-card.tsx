@@ -19,7 +19,7 @@ export function SubjectCard({ subject, onChat, onRegenerate, onArchive }: Props)
   const label = countdownLabel(days);
 
   return (
-    <div className="group relative flex flex-col gap-3 border border-default bg-surface p-5 transition-all hover:-translate-y-[1px] hover:border-strong">
+    <div className="group glow-card relative flex flex-col gap-3 border border-default bg-surface p-5 transition-all hover:-translate-y-[1px]">
       <Link
         href={`/subjects/${subject.id}`}
         className="absolute inset-0 z-0"

@@ -16,7 +16,7 @@ export function TodayPanel({ subjects }: Props) {
 
   if (!focus) {
     return (
-      <div className="border-l-[3px] border-l-[var(--accent)] border border-default bg-surface p-5">
+      <div className="glow-card border-l-[3px] border-l-[var(--accent)] border border-default bg-surface p-5">
         <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-ink-faint">Today</p>
         <h2
           className="mb-1.5 text-[1.4rem] leading-tight"
@@ -50,7 +50,7 @@ export function TodayPanel({ subjects }: Props) {
   const dayCopy = days === null ? "" : days === 0 ? "Today" : days === 1 ? "1 day away" : `${days} days away`;
 
   return (
-    <div className="border-l-[3px] border-l-[var(--accent)] border border-default bg-surface p-5">
+    <div className="glow-card border-l-[3px] border-l-[var(--accent)] border border-default bg-surface p-5">
       <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-ink-faint">Today</p>
       <span
         className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-extrabold uppercase tracking-wide ${urgencyClass}`}

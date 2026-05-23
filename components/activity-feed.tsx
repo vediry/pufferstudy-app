@@ -35,7 +35,7 @@ export function ActivityFeed() {
   }, []);
 
   return (
-    <div className="border border-default bg-surface p-5">
+    <div className="glow-card border border-default bg-surface p-5">
       <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-ink-faint">Recent activity</p>
 
       {error ? (

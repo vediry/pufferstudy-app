@@ -28,7 +28,7 @@ export function UpcomingTimeline({ subjects }: Props) {
   }, [subjects]);
 
   return (
-    <div className="border border-default bg-surface p-5">
+    <div className="glow-card border border-default bg-surface p-5">
       <p className="mb-4 text-[11px] font-bold uppercase tracking-wider text-ink-faint">Upcoming · next 3 weeks</p>
 
       {dots.length === 0 ? (

@@ -62,7 +62,7 @@ export function SubjectsGrid({ subjects, onSubjectsChange }: Props) {
   const handleRegenerate = (s: Subject) => router.push(`/subjects/${s.id}/cheatsheet`);
 
   return (
-    <div className="border border-default bg-surface p-5">
+    <div className="glow-card border border-default bg-surface p-5">
       <p className="mb-4 text-[11px] font-bold uppercase tracking-wider text-ink-faint">
         All subjects ({active.length})
       </p>
