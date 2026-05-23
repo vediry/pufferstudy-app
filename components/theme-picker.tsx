@@ -25,7 +25,7 @@ export function ThemePicker() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-2 border border-default bg-surface-2 px-3 py-1.5 text-sm font-semibold text-ink-muted hover:text-ink"
+        className="glow-on-hover inline-flex items-center gap-2 rounded-[10px] border border-default bg-surface-2 px-3 py-1.5 text-sm font-semibold text-ink-muted hover:text-ink"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Choose theme"

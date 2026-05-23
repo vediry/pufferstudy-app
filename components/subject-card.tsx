@@ -60,7 +60,7 @@ export function SubjectCard({ subject, onChat, onRegenerate, onArchive }: Props)
             <button
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onChat(subject); }}
-              className="flex h-7 w-7 items-center justify-center border border-default bg-surface-2 text-ink-muted hover:bg-surface-3 hover:text-ink"
+              className="glow-on-hover flex h-7 w-7 items-center justify-center rounded-md border border-default bg-surface-2 text-ink-muted hover:bg-surface-3 hover:text-ink"
               title="Open chat"
               aria-label={`Open chat for ${subject.name}`}
             >
@@ -71,7 +71,7 @@ export function SubjectCard({ subject, onChat, onRegenerate, onArchive }: Props)
             <button
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRegenerate(subject); }}
-              className="flex h-7 w-7 items-center justify-center border border-default bg-surface-2 text-ink-muted hover:bg-surface-3 hover:text-ink"
+              className="glow-on-hover flex h-7 w-7 items-center justify-center rounded-md border border-default bg-surface-2 text-ink-muted hover:bg-surface-3 hover:text-ink"
               title="Regenerate cheat sheet"
               aria-label={`Regenerate cheat sheet for ${subject.name}`}
             >
@@ -82,7 +82,7 @@ export function SubjectCard({ subject, onChat, onRegenerate, onArchive }: Props)
             <button
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onArchive(subject); }}
-              className="flex h-7 w-7 items-center justify-center border border-default bg-surface-2 text-ink-muted hover:bg-surface-3 hover:text-ink"
+              className="glow-on-hover flex h-7 w-7 items-center justify-center rounded-md border border-default bg-surface-2 text-ink-muted hover:bg-surface-3 hover:text-ink"
               title={subject.archived ? "Unarchive" : "Archive"}
               aria-label={subject.archived ? `Unarchive ${subject.name}` : `Archive ${subject.name}`}
             >
