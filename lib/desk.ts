@@ -7,7 +7,16 @@ const DAY_MS = 1000 * 60 * 60 * 24;
 
 export function daysUntil(testDate: string | null, now: Date = new Date()): number | null {
   if (!testDate) return null;
-  const target = new Date(testDate);
+  // The DB returns DATE as ISO with UTC midnight; parsing directly shifts to the
+  // previous day in negative-UTC timezones. Pull YYYY-MM-DD and build a local-
+  // midnight Date so the count matches what users would say (mirrors lib/utils.ts).
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(testDate);
+  if (!match) return null;
+  const target = new Date(
+    parseInt(match[1], 10),
+    parseInt(match[2], 10) - 1,
+    parseInt(match[3], 10),
+  );
   if (Number.isNaN(target.getTime())) return null;
   const diff = target.getTime() - now.getTime();
   return Math.ceil(diff / DAY_MS);

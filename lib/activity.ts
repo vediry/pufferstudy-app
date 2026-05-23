@@ -57,7 +57,7 @@ export async function listActivity(userId: string, limit: number): Promise<Activ
       a.created_at,
       s.name AS subject_name
     FROM activity_log a
-    LEFT JOIN subjects s ON s.id = a.subject_id
+    LEFT JOIN subjects s ON s.id::text = a.subject_id
     WHERE a.user_id = ${userId}
     ORDER BY a.created_at DESC
     LIMIT ${safeLimit}
