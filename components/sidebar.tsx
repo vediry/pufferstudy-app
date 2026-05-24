@@ -3,7 +3,13 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, NotebookPen } from "lucide-react";
+import {
+  LayoutGrid,
+  NotebookPen,
+  ClipboardList,
+  Layers,
+  HelpCircle,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 type NavItem = {
@@ -16,6 +22,9 @@ type NavItem = {
 const NAV: NavItem[] = [
   { label: "Study Desk", href: "/", icon: LayoutGrid, matchPrefix: "/" },
   { label: "Notepad", href: "/notepad", icon: NotebookPen, matchPrefix: "/notepad" },
+  { label: "Assignments", href: "/assignments", icon: ClipboardList, matchPrefix: "/assignments" },
+  { label: "Flashcards", href: "/flashcards", icon: Layers, matchPrefix: "/flashcards" },
+  { label: "Practice", href: "/practice", icon: HelpCircle, matchPrefix: "/practice" },
 ];
 
 function useIsActive() {
