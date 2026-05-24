@@ -20,7 +20,7 @@ export default function NotepadPage() {
 
       <div className="glow-card border border-default bg-surface p-8">
         <div className="flex flex-col items-center gap-3 py-12 text-center">
-          <div className="flex h-12 w-12 items-center justify-center border border-default bg-surface-2 text-[color:var(--accent-deep)]">
+          <div className="flex h-12 w-12 items-center justify-center rounded-[12px] border border-default bg-surface-2 text-[color:var(--accent-deep)]">
             <NotebookPen className="h-6 w-6" strokeWidth={1.5} />
           </div>
           <h2

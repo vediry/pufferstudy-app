@@ -55,7 +55,7 @@ export function ActivityFeed() {
             const Icon = ICONS[r.iconKey];
             return (
               <li key={event.id} className="flex items-start gap-3">
-                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center border border-default bg-surface-2 text-ink-muted">
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md border border-default bg-surface-2 text-ink-muted">
                   <Icon className="h-4 w-4" strokeWidth={1.75} />
                 </div>
                 <div className="text-sm leading-snug text-ink">

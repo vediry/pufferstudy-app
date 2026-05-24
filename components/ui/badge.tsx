@@ -1,14 +1,15 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-type Tone = "neutral" | "danger" | "warning" | "success" | "past";
+type Tone = "neutral" | "danger" | "warning" | "success" | "past" | "accent";
 
 const TONE_CLASSES: Record<Tone, string> = {
-  neutral: "bg-surface-2 text-ink-muted",
-  danger:  "bg-[var(--danger)] text-white",
-  warning: "bg-[var(--warning)] text-white",
-  success: "bg-[var(--success)] text-white",
-  past:    "bg-surface-2 text-ink-faint",
+  neutral: "border-default text-ink-muted",
+  danger:  "border-[color:var(--danger)] text-[color:var(--danger)]",
+  warning: "border-[color:var(--warning)] text-[color:var(--warning)]",
+  success: "border-[color:var(--success)] text-[color:var(--success)]",
+  past:    "border-default text-ink-faint",
+  accent:  "border-[color:var(--accent)] text-[color:var(--accent)]",
 };
 
 export function Badge({
@@ -19,7 +20,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium tabular",
+        "inline-flex items-center rounded-full border bg-[color:var(--surface)]/60 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider tabular backdrop-blur-sm",
         TONE_CLASSES[tone],
         className,
       )}

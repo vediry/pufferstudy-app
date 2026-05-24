@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { ArrowRight, MessageSquare, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { pickSoonestSubject, urgencyTier, daysUntil } from "@/lib/desk";
 import type { Subject } from "@/lib/cloud-subjects";
 
@@ -39,24 +40,14 @@ export function TodayPanel({ subjects }: Props) {
 
   const days = daysUntil(focus.testDate);
   const tier = urgencyTier(focus.testDate);
-
-  const urgencyClass =
-    tier === "urgent"
-      ? "bg-[color:var(--danger)] text-white"
-      : tier === "warn"
-      ? "bg-[color:var(--warning)] text-white"
-      : "bg-[color:var(--accent)] text-[color:var(--primary-foreground)]";
-
+  const badgeTone =
+    tier === "urgent" ? "danger" : tier === "warn" ? "warning" : "accent";
   const dayCopy = days === null ? "" : days === 0 ? "Today" : days === 1 ? "1 day away" : `${days} days away`;
 
   return (
     <div className="glow-card border-l-[3px] border-l-[var(--accent)] border border-default bg-surface p-5">
       <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-ink-faint">Today</p>
-      <span
-        className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-extrabold uppercase tracking-wide ${urgencyClass}`}
-      >
-        {tier === "urgent" ? "🔥 " : ""}{dayCopy}
-      </span>
+      <Badge tone={badgeTone}>{dayCopy}</Badge>
       <h2
         className="mt-3 text-[1.5rem] leading-tight text-ink"
         style={{ fontFamily: "var(--font-serif)", fontWeight: 400 }}

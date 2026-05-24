@@ -75,7 +75,7 @@ export function UpcomingTimeline({ subjects }: Props) {
                   />
                   <Link
                     href={`/subjects/${subject.id}`}
-                    className="absolute top-[18px] -translate-x-1/2 whitespace-nowrap border border-default bg-surface px-1 py-0.5 text-[11px] font-semibold text-ink"
+                    className="glow-on-hover absolute top-[18px] -translate-x-1/2 whitespace-nowrap rounded-full border border-default bg-surface px-2 py-0.5 text-[11px] font-semibold text-ink"
                     style={{ left: `${left}%` }}
                   >
                     {subject.name}

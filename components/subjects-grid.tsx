@@ -75,13 +75,13 @@ export function SubjectsGrid({ subjects, onSubjectsChange }: Props) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search subjects…"
-            className="w-full border border-default bg-surface-2 px-3 py-2 pl-9 text-sm font-medium text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
+            className="w-full rounded-[10px] border border-default bg-surface-2 px-3 py-2 pl-9 text-sm font-medium text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
           />
         </div>
         <select
           value={sortMode}
           onChange={(e) => persistedSort(e.target.value as SortMode)}
-          className="border border-strong bg-surface px-3 py-2 text-sm font-semibold text-ink"
+          className="rounded-[10px] border border-strong bg-surface px-3 py-2 text-sm font-semibold text-ink"
         >
           <option value="urgency">By urgency</option>
           <option value="recent">Recently studied</option>

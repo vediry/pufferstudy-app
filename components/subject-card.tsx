@@ -28,7 +28,7 @@ export function SubjectCard({ subject, onChat, onRegenerate, onArchive }: Props)
 
       <div className="relative z-10 flex items-start justify-between gap-3">
         <div
-          className="flex h-10 w-10 items-center justify-center border border-default"
+          className="flex h-10 w-10 items-center justify-center rounded-[10px] border border-default"
           style={{ background: "var(--surface-2)", color: "var(--accent-deep)" }}
         >
           <BookOpen className="h-5 w-5" strokeWidth={1.75} />
