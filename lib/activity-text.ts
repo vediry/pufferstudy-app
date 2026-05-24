@@ -50,5 +50,13 @@ export function renderActivity(event: ActivityEvent): RenderedActivity {
       const title = typeof data.title === "string" ? data.title : "an assignment";
       return { iconKey: "gen", text: `Completed: ${title}` };
     }
+
+    case "flashcards_generated": {
+      const count = typeof data.cardCount === "number" ? data.cardCount : 0;
+      return {
+        iconKey: "gen",
+        text: `Generated ${count} flashcards for ${subject}`,
+      };
+    }
   }
 }

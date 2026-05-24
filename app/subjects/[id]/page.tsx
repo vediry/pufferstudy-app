@@ -12,6 +12,8 @@ import {
   AlertCircle,
   KeyRound,
   ChevronDown,
+  Layers,
+  Loader2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,6 +31,7 @@ import {
   updateSubject,
   type SubjectFile,
 } from "@/lib/cloud-subjects";
+import { generateDeck, fetchDecks } from "@/lib/cloud-flashcards";
 import { countdownLabel, countdownTone, daysUntil } from "@/lib/utils";
 
 type GenState =
@@ -52,6 +55,10 @@ export default function SubjectPage() {
   // Once we know whether a cheatsheet exists, default to collapsed if it does
   // (chat = focus) or expanded if it doesn't (user needs to upload).
   const [filesOpen, setFilesOpen] = React.useState<boolean | null>(null);
+  // Flashcards: existing deck id for this subject (if any), and generation state.
+  const [deckId, setDeckId] = React.useState<string | null>(null);
+  const [flashcardsGenerating, setFlashcardsGenerating] = React.useState(false);
+  const [flashcardsError, setFlashcardsError] = React.useState<string | null>(null);
   const abortRef = React.useRef<AbortController | null>(null);
 
   React.useEffect(() => {
@@ -74,6 +81,46 @@ export default function SubjectPage() {
   }, [subject, state.kind]);
 
   React.useEffect(() => () => abortRef.current?.abort(), []);
+
+  // Look up whether this subject already has a flashcard deck so we can show
+  // "Study flashcards" vs "Generate flashcards" accordingly.
+  React.useEffect(() => {
+    if (!subject) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const decks = await fetchDecks();
+        if (cancelled) return;
+        const match = decks.find((d) => d.subjectId === subject.id);
+        setDeckId(match?.id ?? null);
+      } catch {
+        // Non-fatal — deck list is best-effort.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [subject]);
+
+  async function onGenerateFlashcards() {
+    if (!subject) return;
+    const key = getSettings().geminiKey;
+    if (!key) {
+      setFlashcardsError("Add your Gemini API key in Settings to generate flashcards.");
+      return;
+    }
+    setFlashcardsError(null);
+    setFlashcardsGenerating(true);
+    try {
+      const { deck } = await generateDeck(subject.id, key);
+      setDeckId(deck.id);
+      router.push(`/flashcards/${deck.id}`);
+    } catch (err) {
+      setFlashcardsError(err instanceof Error ? err.message : "Couldn't generate flashcards.");
+    } finally {
+      setFlashcardsGenerating(false);
+    }
+  }
 
   function onUploaded(newFiles: SubjectFile[]) {
     if (!subject) return;
@@ -254,6 +301,30 @@ export default function SubjectPage() {
                 Print
               </Button>
             ) : null}
+            {hasCheatsheet ? (
+              deckId ? (
+                <Button variant="secondary" asChild>
+                  <Link href={`/flashcards/${deckId}`}>
+                    <Layers />
+                    Study flashcards
+                  </Link>
+                </Button>
+              ) : (
+                <Button
+                  variant="secondary"
+                  onClick={onGenerateFlashcards}
+                  disabled={flashcardsGenerating || !hasKey}
+                  title={!hasKey ? "Add your Gemini key in Settings first" : undefined}
+                >
+                  {flashcardsGenerating ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <Layers />
+                  )}
+                  {flashcardsGenerating ? "Generating…" : "Generate flashcards"}
+                </Button>
+              )
+            ) : null}
             <Button
               variant="ghost"
               size="icon"
@@ -264,6 +335,16 @@ export default function SubjectPage() {
             </Button>
           </div>
         </header>
+
+        {flashcardsError ? (
+          <div
+            role="alert"
+            className="mb-6 flex items-start gap-3 rounded-[14px] border border-[color:var(--danger)]/40 bg-[color:var(--danger)]/8 p-4 text-sm"
+          >
+            <AlertCircle className="mt-0.5 h-5 w-5 text-[color:var(--danger)]" strokeWidth={1.75} />
+            <p className="flex-1 text-ink">{flashcardsError}</p>
+          </div>
+        ) : null}
 
         {!hasKey ? (
           <div className="mb-6 flex items-start gap-3 rounded-[14px] border border-default bg-surface-2/60 p-4 text-sm text-ink-muted">
