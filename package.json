@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "migrate:chat": "node --env-file=.env.local --import tsx scripts/migrate-chat-messages.ts",
     "migrate:v23": "node --env-file=.env.local --import tsx scripts/migrate-v2.3.ts",
-    "migrate:notepad": "node --env-file=.env.local --import tsx scripts/migrate-notepad.ts"
+    "migrate:notepad": "node --env-file=.env.local --import tsx scripts/migrate-notepad.ts",
+    "migrate:assignments": "node --env-file=.env.local --import tsx scripts/migrate-assignments.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.3.5",

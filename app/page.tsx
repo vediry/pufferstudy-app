@@ -10,9 +10,11 @@ import { ActivityFeed } from "@/components/activity-feed";
 import { UpcomingTimeline } from "@/components/upcoming-timeline";
 import { SubjectsGrid } from "@/components/subjects-grid";
 import { useSubjects } from "@/lib/cloud-subjects";
+import { useAssignments } from "@/lib/cloud-assignments";
 
 export default function DeskPage() {
   const { subjects: loaded, error, refresh } = useSubjects();
+  const { assignments } = useAssignments();
   const { user } = useUser();
 
   // Local mirror so optimistic archive updates don't wait for refresh.
@@ -72,11 +74,11 @@ export default function DeskPage() {
       ) : (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start">
           <aside className="flex flex-col gap-4 lg:sticky lg:top-24 lg:col-span-1 lg:self-start lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
-            <TodayPanel subjects={items} />
+            <TodayPanel subjects={items} assignments={assignments ?? []} />
             <ActivityFeed />
           </aside>
           <section className="flex flex-col gap-4 lg:col-span-2">
-            <UpcomingTimeline subjects={items} />
+            <UpcomingTimeline subjects={items} assignments={assignments ?? []} />
             <SubjectsGrid
               subjects={items}
               onSubjectsChange={(updater) =>

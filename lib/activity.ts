@@ -6,7 +6,9 @@ export type ActivityEventType =
   | "cheatsheet_refined"
   | "chat_question"
   | "files_uploaded"
-  | "subject_created";
+  | "subject_created"
+  | "assignment_created"
+  | "assignment_completed";
 
 export type ActivityEvent = {
   id: number;

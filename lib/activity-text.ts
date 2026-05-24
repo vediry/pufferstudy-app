@@ -40,5 +40,15 @@ export function renderActivity(event: ActivityEvent): RenderedActivity {
       const name = typeof data.name === "string" ? data.name : subject;
       return { iconKey: "new", text: `Created new subject ${name}` };
     }
+
+    case "assignment_created": {
+      const title = typeof data.title === "string" ? data.title : "an assignment";
+      return { iconKey: "new", text: `Added assignment: ${title}` };
+    }
+
+    case "assignment_completed": {
+      const title = typeof data.title === "string" ? data.title : "an assignment";
+      return { iconKey: "gen", text: `Completed: ${title}` };
+    }
   }
 }
