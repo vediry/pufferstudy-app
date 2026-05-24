@@ -6,6 +6,7 @@ import remarkGfm from "remark-gfm";
 import { ArrowUp, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { DictationButton } from "@/components/dictation-button";
 import { refine } from "@/lib/refine-stream";
 import type { ChatMessage } from "@/types";
 
@@ -213,6 +214,18 @@ export function CheatsheetChat({
             "focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30",
             "disabled:cursor-not-allowed disabled:opacity-60",
           )}
+        />
+        <DictationButton
+          disabled={disabled}
+          onTranscript={(text, isFinal) => {
+            // Only commit final results to the textarea so interim partials
+            // don't fight with the user's edits. The mic button's pulsing
+            // state tells the user it's still listening.
+            if (!isFinal) return;
+            const trimmed = text.trim();
+            if (!trimmed) return;
+            setInput((prev) => (prev ? `${prev.trimEnd()} ${trimmed}` : trimmed));
+          }}
         />
         <Button
           type="submit"
