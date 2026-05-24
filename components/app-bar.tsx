@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Settings } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { ThemePicker } from "@/components/theme-picker";
 
@@ -16,6 +17,14 @@ export function AppBar() {
         </Link>
         <nav className="flex items-center gap-3">
           <ThemePicker />
+          <Link
+            href="/settings"
+            aria-label="Settings"
+            title="Settings"
+            className="glow-on-hover inline-flex h-9 w-9 items-center justify-center rounded-[10px] border border-default bg-surface-2 text-ink-muted hover:text-ink"
+          >
+            <Settings className="h-4 w-4" strokeWidth={1.75} />
+          </Link>
           <UserButton
             appearance={{
               elements: {
