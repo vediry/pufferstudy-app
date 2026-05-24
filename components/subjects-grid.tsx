@@ -40,7 +40,7 @@ export function SubjectsGrid({ subjects, onSubjectsChange }: Props) {
     return sortSubjects(filterSubjects(active, query), sortMode);
   }, [active, query, sortMode]);
 
-  const handleChat = (s: Subject) => router.push(`/subjects/${s.id}/cheatsheet`);
+  const handleChat = (s: Subject) => router.push(`/subjects/${s.id}`);
 
   const handleArchive = async (s: Subject) => {
     onSubjectsChange((prev) =>
@@ -59,7 +59,7 @@ export function SubjectsGrid({ subjects, onSubjectsChange }: Props) {
   // Regenerate-from-desk needs Gemini key + streaming PATCH that v2.3 doesn't wire from
   // the desk. Navigating to the cheatsheet page (where Regenerate already exists) keeps
   // scope tight without losing the affordance.
-  const handleRegenerate = (s: Subject) => router.push(`/subjects/${s.id}/cheatsheet`);
+  const handleRegenerate = (s: Subject) => router.push(`/subjects/${s.id}`);
 
   return (
     <div className="glow-card border border-default bg-surface p-5">

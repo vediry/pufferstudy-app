@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowRight, MessageSquare, Plus } from "lucide-react";
+import { ArrowRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { pickSoonestSubject, urgencyTier, daysUntil } from "@/lib/desk";
@@ -58,20 +58,12 @@ export function TodayPanel({ subjects }: Props) {
         {focus.fileCount} {focus.fileCount === 1 ? "file" : "files"}
         {focus.cheatsheetGeneratedAt ? " · sheet ready" : ""}
       </p>
-      <div className="flex gap-2">
-        <Button asChild className="flex-1">
-          <Link href={`/subjects/${focus.id}`}>
-            Open subject
-            <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
-          </Link>
-        </Button>
-        <Button asChild variant="secondary" className="flex-1">
-          <Link href={`/subjects/${focus.id}/cheatsheet`}>
-            <MessageSquare className="h-4 w-4" strokeWidth={1.75} />
-            Chat
-          </Link>
-        </Button>
-      </div>
+      <Button asChild className="w-full">
+        <Link href={`/subjects/${focus.id}`}>
+          Open subject
+          <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
+        </Link>
+      </Button>
     </div>
   );
 }
