@@ -11,6 +11,7 @@ import {
   Trash2,
   AlertCircle,
   KeyRound,
+  ChevronDown,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -47,7 +48,17 @@ export default function SubjectPage() {
   const [hasKey, setHasKey] = React.useState<boolean>(false);
   const [apiKey, setApiKey] = React.useState<string | null>(null);
   const [state, setState] = React.useState<GenState>({ kind: "idle" });
+  // Files panel: null = not initialized yet (waiting for subject load).
+  // Once we know whether a cheatsheet exists, default to collapsed if it does
+  // (chat = focus) or expanded if it doesn't (user needs to upload).
+  const [filesOpen, setFilesOpen] = React.useState<boolean | null>(null);
   const abortRef = React.useRef<AbortController | null>(null);
+
+  React.useEffect(() => {
+    if (subject && filesOpen === null) {
+      setFilesOpen(!subject.cheatsheetMarkdown);
+    }
+  }, [subject, filesOpen]);
 
   React.useEffect(() => {
     const key = getSettings().geminiKey;
@@ -330,24 +341,39 @@ export default function SubjectPage() {
 
         {/* Side: files panel + chat panel */}
         <aside className="no-print flex w-full min-w-0 flex-col gap-4 lg:w-[420px] lg:shrink-0 lg:sticky lg:top-6 lg:self-start lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
-          {/* Files */}
-          <section className="glow-card flex flex-col gap-3 border border-default bg-surface p-4">
-            <header className="flex items-center justify-between">
+          {/* Files — collapsible to keep chat in view */}
+          <section className="glow-card flex flex-col border border-default bg-surface">
+            <button
+              type="button"
+              onClick={() => setFilesOpen((v) => !v)}
+              aria-expanded={filesOpen === true}
+              className="glow-on-hover flex items-center justify-between rounded-[14px] px-4 py-3 text-left"
+            >
               <p className="text-[11px] font-bold uppercase tracking-wider text-ink-faint">
                 Files {hasFiles ? `(${subject.files.length})` : ""}
               </p>
-            </header>
-            <ImageUploader subjectId={subject.id} onUploaded={onUploaded} />
-            {hasFiles ? (
-              <div className="grid grid-cols-1 gap-3">
-                {subject.files.map((file) => (
-                  <ImageGridItem
-                    key={file.id}
-                    file={file}
-                    onCaptionChange={(next) => onCaption(file, next)}
-                    onDelete={() => onDeleteFile(file)}
-                  />
-                ))}
+              <ChevronDown
+                className={`h-4 w-4 text-ink-muted transition-transform ${
+                  filesOpen ? "" : "-rotate-90"
+                }`}
+                strokeWidth={2}
+              />
+            </button>
+            {filesOpen ? (
+              <div className="flex flex-col gap-3 border-t border-default px-4 pb-4 pt-3">
+                <ImageUploader subjectId={subject.id} onUploaded={onUploaded} />
+                {hasFiles ? (
+                  <div className="grid grid-cols-1 gap-3">
+                    {subject.files.map((file) => (
+                      <ImageGridItem
+                        key={file.id}
+                        file={file}
+                        onCaptionChange={(next) => onCaption(file, next)}
+                        onDelete={() => onDeleteFile(file)}
+                      />
+                    ))}
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </section>
