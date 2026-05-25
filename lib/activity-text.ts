@@ -61,5 +61,16 @@ export function renderActivity(event: ActivityEvent): RenderedActivity {
 
     case "study_guide_generated":
       return { iconKey: "gen", text: `Generated study guide for ${subject}` };
+
+    case "practice_generated": {
+      const count = typeof data.questionCount === "number" ? data.questionCount : 0;
+      return { iconKey: "gen", text: `Generated ${count} practice questions for ${subject}` };
+    }
+
+    case "practice_completed": {
+      const score = typeof data.score === "number" ? data.score : 0;
+      const max = typeof data.max === "number" ? data.max : 0;
+      return { iconKey: "gen", text: `Scored ${score}/${max} on ${subject} practice` };
+    }
   }
 }
