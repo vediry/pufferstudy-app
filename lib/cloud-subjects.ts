@@ -10,6 +10,8 @@ export type Subject = {
   testDate: string | null;
   cheatsheetMarkdown: string | null;
   cheatsheetGeneratedAt: string | null;
+  studyGuideMarkdown: string | null;
+  studyGuideGeneratedAt: string | null;
   chatMessages: ChatMessage[];
   archived: boolean;
   fileCount: number;
@@ -36,6 +38,8 @@ type DbSubject = {
   test_date: string | null;
   cheatsheet_markdown: string | null;
   cheatsheet_generated_at: string | null;
+  study_guide_markdown: string | null;
+  study_guide_generated_at: string | null;
   chat_messages: ChatMessage[];
   archived: boolean;
   file_count?: number;
@@ -61,6 +65,8 @@ function mapSubject(row: DbSubject): Subject {
     testDate: row.test_date,
     cheatsheetMarkdown: row.cheatsheet_markdown,
     cheatsheetGeneratedAt: row.cheatsheet_generated_at,
+    studyGuideMarkdown: row.study_guide_markdown ?? null,
+    studyGuideGeneratedAt: row.study_guide_generated_at ?? null,
     chatMessages: row.chat_messages ?? [],
     archived: row.archived ?? false,
     fileCount: row.file_count ?? 0,
@@ -121,6 +127,7 @@ export async function updateSubject(
     testLabel?: string | null;
     testDate?: string | null;
     cheatsheetMarkdown?: string | null;
+    studyGuideMarkdown?: string | null;
     chatMessages?: ChatMessage[];
     archived?: boolean;
   },

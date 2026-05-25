@@ -58,5 +58,8 @@ export function renderActivity(event: ActivityEvent): RenderedActivity {
         text: `Generated ${count} flashcards for ${subject}`,
       };
     }
+
+    case "study_guide_generated":
+      return { iconKey: "gen", text: `Generated study guide for ${subject}` };
   }
 }

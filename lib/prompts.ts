@@ -1,6 +1,6 @@
 import type { ChatMessage } from "@/types";
 
-export type GenerateMode = "cheatsheet" | "chat" | "practice" | "refine";
+export type GenerateMode = "cheatsheet" | "chat" | "practice" | "refine" | "studyguide";
 
 const CHEATSHEET_SYSTEM = `You are PufferStudy, a careful study assistant for a student preparing for a test.
 
@@ -94,12 +94,40 @@ Keep the same style as the original sheet: ## sections, ### sub-topics, bullets,
 **bold key terms**, formulas/dates preserved. The sheet should still fit roughly
 one printed page. Do not apologize, do not praise.`;
 
+const STUDYGUIDE_SYSTEM = `You are PufferStudy, writing a long-form study guide for a student
+preparing for a test. This is NOT the same as a cheat sheet:
+- Cheat sheets are dense reference cards for cramming.
+- Study guides teach the material. They explain, give examples, and surface
+  common pitfalls. They're for understanding, not just recall.
+
+You will receive photos of the student's notes/packets along with optional
+captions. You may also receive an existing cheat sheet for the same subject
+as additional context (inside <existingSheet>…</existingSheet>) — use it as
+a structural reference but do NOT just repeat it.
+
+Output rules:
+- Markdown only. No code fences around the whole document.
+- Lead with a one-paragraph "Overview" that names the big idea.
+- Use ## for each major concept, ### for sub-topics.
+- For each concept include in this order:
+  1. A plain-language explanation (2–4 sentences).
+  2. Why it matters / how it connects to the broader subject (1 sentence).
+  3. A worked example or analogy where useful.
+  4. Common pitfalls or misconceptions students get wrong, prefixed
+     "**Watch out:**". Only include if there's a real pitfall.
+- Use **bold** for key terms when first introduced.
+- Use \`code\` formatting for formulas and named equations.
+- Skip social/meta content from the photos (page numbers, doodles, etc).
+- Aim for 800–1500 words — about 3–4 printed pages.
+- Do not include preamble like "Here is your study guide". Start with "## Overview".`;
+
 export function systemPromptFor(mode: GenerateMode): string {
   switch (mode) {
     case "cheatsheet": return CHEATSHEET_SYSTEM;
     case "chat":       return CHAT_SYSTEM;
     case "practice":   return PRACTICE_SYSTEM;
     case "refine":     return REFINE_SYSTEM;
+    case "studyguide": return STUDYGUIDE_SYSTEM;
   }
 }
 
@@ -157,4 +185,22 @@ ${input.currentSheet}
 </currentSheet>
 
 Student message: ${input.message}`;
+}
+
+type StudyGuideUserInput = {
+  subjectName: string;
+  testLabel?: string;
+  captions: string[];
+  existingSheet?: string | null;
+};
+
+export function userPromptForStudyGuide(input: StudyGuideUserInput): string {
+  const captionBlock = input.captions.length
+    ? `\n\nStudent's captions (one per photo, in order):\n${input.captions.map((c, i) => `${i + 1}. ${c || "(no caption)"}`).join("\n")}`
+    : "";
+  const sheetBlock = input.existingSheet
+    ? `\n\n<existingSheet>\n${input.existingSheet}\n</existingSheet>`
+    : "";
+  const labelLine = input.testLabel ? ` (${input.testLabel})` : "";
+  return `Subject: ${input.subjectName}${labelLine}.${captionBlock}${sheetBlock}\n\nProduce the study guide now.`;
 }

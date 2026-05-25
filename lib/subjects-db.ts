@@ -10,6 +10,8 @@ export type DbSubject = {
   test_date: string | null;
   cheatsheet_markdown: string | null;
   cheatsheet_generated_at: string | null;
+  study_guide_markdown: string | null;
+  study_guide_generated_at: string | null;
   chat_messages: ChatMessage[];
   archived: boolean;
   created_at: string;
@@ -37,6 +39,7 @@ export async function listSubjects(userId: string): Promise<DbSubjectWithFileCou
     SELECT
       s.id, s.user_id, s.name, s.test_label, s.test_date,
       s.cheatsheet_markdown, s.cheatsheet_generated_at,
+      s.study_guide_markdown, s.study_guide_generated_at,
       s.chat_messages, s.archived, s.created_at, s.updated_at,
       COALESCE(COUNT(f.id), 0)::int AS file_count
     FROM subjects s
@@ -89,6 +92,7 @@ export async function updateSubject(
     testLabel?: string | null;
     testDate?: string | null;
     cheatsheetMarkdown?: string | null;
+    studyGuideMarkdown?: string | null;
     chatMessages?: ChatMessage[];
     archived?: boolean;
   },
@@ -98,6 +102,7 @@ export async function updateSubject(
     patch.testLabel === undefined &&
     patch.testDate === undefined &&
     patch.cheatsheetMarkdown === undefined &&
+    patch.studyGuideMarkdown === undefined &&
     patch.chatMessages === undefined &&
     patch.archived === undefined;
 
@@ -109,6 +114,7 @@ export async function updateSubject(
   }
 
   const cheatsheetTimestamp = patch.cheatsheetMarkdown !== undefined ? new Date().toISOString() : null;
+  const studyGuideTimestamp = patch.studyGuideMarkdown !== undefined ? new Date().toISOString() : null;
   const chatJson = patch.chatMessages !== undefined ? JSON.stringify(patch.chatMessages) : null;
 
   const { rows } = await sql<DbSubject>`
@@ -119,6 +125,8 @@ export async function updateSubject(
       test_date = CASE WHEN ${patch.testDate === undefined ? "no" : "yes"}::text = 'yes' THEN ${patch.testDate ?? null}::date ELSE test_date END,
       cheatsheet_markdown = CASE WHEN ${patch.cheatsheetMarkdown === undefined ? "no" : "yes"}::text = 'yes' THEN ${patch.cheatsheetMarkdown ?? null} ELSE cheatsheet_markdown END,
       cheatsheet_generated_at = CASE WHEN ${patch.cheatsheetMarkdown === undefined ? "no" : "yes"}::text = 'yes' THEN ${cheatsheetTimestamp}::timestamptz ELSE cheatsheet_generated_at END,
+      study_guide_markdown = CASE WHEN ${patch.studyGuideMarkdown === undefined ? "no" : "yes"}::text = 'yes' THEN ${patch.studyGuideMarkdown ?? null} ELSE study_guide_markdown END,
+      study_guide_generated_at = CASE WHEN ${patch.studyGuideMarkdown === undefined ? "no" : "yes"}::text = 'yes' THEN ${studyGuideTimestamp}::timestamptz ELSE study_guide_generated_at END,
       chat_messages = CASE WHEN ${patch.chatMessages === undefined ? "no" : "yes"}::text = 'yes' THEN ${chatJson}::jsonb ELSE chat_messages END,
       archived = CASE WHEN ${patch.archived === undefined ? "no" : "yes"}::text = 'yes' THEN ${patch.archived ?? false}::boolean ELSE archived END,
       updated_at = now()

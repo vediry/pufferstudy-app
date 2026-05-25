@@ -6,6 +6,7 @@ import {
   userPromptForChat,
   userPromptForPractice,
   userPromptForRefine,
+  userPromptForStudyGuide,
   type GenerateMode,
 } from "@/lib/prompts";
 import { getFilesByIds } from "@/lib/subjects-db";
@@ -28,6 +29,7 @@ type Body = {
   history?: ChatMessage[];
   currentSheet?: string;   // refine mode only
   message?: string;        // refine mode only
+  existingSheet?: string;  // studyguide mode only — optional context
 };
 
 function bad(status: number, message: string, code = "bad_request") {
@@ -63,8 +65,14 @@ export async function POST(req: Request) {
   if (typeof apiKey !== "string" || apiKey.trim().length < 10) {
     return bad(401, "Missing or invalid API key.", "invalid_key");
   }
-  if (mode !== "cheatsheet" && mode !== "chat" && mode !== "practice" && mode !== "refine") {
-    return bad(400, "Mode must be cheatsheet, chat, practice, or refine.");
+  if (
+    mode !== "cheatsheet" &&
+    mode !== "chat" &&
+    mode !== "practice" &&
+    mode !== "refine" &&
+    mode !== "studyguide"
+  ) {
+    return bad(400, "Mode must be cheatsheet, chat, practice, refine, or studyguide.");
   }
   if (typeof subjectName !== "string" || !subjectName.trim()) {
     return bad(400, "subjectName is required.");
@@ -81,6 +89,13 @@ export async function POST(req: Request) {
       userId,
       subjectId: body.subjectId ?? null,
       type: "cheatsheet_generated",
+      data: { sourceFileCount: fileIds.length },
+    });
+  } else if (mode === "studyguide") {
+    void logActivity({
+      userId,
+      subjectId: body.subjectId ?? null,
+      type: "study_guide_generated",
       data: { sourceFileCount: fileIds.length },
     });
   }
@@ -115,6 +130,13 @@ export async function POST(req: Request) {
         subjectName,
         testLabel: body.testLabel,
         captions,
+      });
+    } else if (mode === "studyguide") {
+      userPrompt = userPromptForStudyGuide({
+        subjectName,
+        testLabel: body.testLabel,
+        captions,
+        existingSheet: body.existingSheet ?? null,
       });
     } else if (mode === "practice") {
       userPrompt = userPromptForPractice({ subjectName, captions });
@@ -168,7 +190,7 @@ export async function POST(req: Request) {
         systemInstruction: { parts: [{ text: systemPromptFor(mode) }] },
         generationConfig: {
           temperature: mode === "practice" ? 0.4 : 0.6,
-          maxOutputTokens: 4096,
+          maxOutputTokens: mode === "studyguide" ? 8192 : 4096,
           responseMimeType: mode === "practice" ? "application/json" : "text/plain",
         },
       }),

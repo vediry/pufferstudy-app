@@ -14,6 +14,7 @@ import {
   ChevronDown,
   Layers,
   Loader2,
+  BookText,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -324,6 +325,14 @@ export default function SubjectPage() {
                   {flashcardsGenerating ? "Generating…" : "Generate flashcards"}
                 </Button>
               )
+            ) : null}
+            {hasFiles ? (
+              <Button variant="secondary" asChild>
+                <Link href={`/study-guides/${subject.id}`}>
+                  <BookText />
+                  {subject.studyGuideMarkdown ? "Open study guide" : "Study guide"}
+                </Link>
+              </Button>
             ) : null}
             <Button
               variant="ghost"

@@ -9,6 +9,7 @@ import {
   ClipboardList,
   Layers,
   HelpCircle,
+  BookText,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -23,6 +24,7 @@ const NAV: NavItem[] = [
   { label: "Study Desk", href: "/", icon: LayoutGrid, matchPrefix: "/" },
   { label: "Notepad", href: "/notepad", icon: NotebookPen, matchPrefix: "/notepad" },
   { label: "Assignments", href: "/assignments", icon: ClipboardList, matchPrefix: "/assignments" },
+  { label: "Guides", href: "/study-guides", icon: BookText, matchPrefix: "/study-guides" },
   { label: "Flashcards", href: "/flashcards", icon: Layers, matchPrefix: "/flashcards" },
   { label: "Practice", href: "/practice", icon: HelpCircle, matchPrefix: "/practice" },
 ];

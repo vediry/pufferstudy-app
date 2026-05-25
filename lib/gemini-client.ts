@@ -28,11 +28,16 @@ export async function generate(input: GenerateInput, handlers: StreamHandlers): 
   const payload = {
     apiKey: input.apiKey,
     mode: input.mode,
+    subjectId: input.subject.id,
     subjectName: input.subject.name,
     testLabel: input.subject.testLabel ?? undefined,
     fileIds: input.subject.files.map((f) => f.id),
     question: input.question,
     history: input.history,
+    // Pass the cheat sheet (if present) as additional context when generating
+    // the study guide — gives the model a structural reference to riff on.
+    existingSheet:
+      input.mode === "studyguide" ? input.subject.cheatsheetMarkdown ?? undefined : undefined,
   };
 
   let res: Response;

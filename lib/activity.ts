@@ -9,7 +9,8 @@ export type ActivityEventType =
   | "subject_created"
   | "assignment_created"
   | "assignment_completed"
-  | "flashcards_generated";
+  | "flashcards_generated"
+  | "study_guide_generated";
 
 export type ActivityEvent = {
   id: number;

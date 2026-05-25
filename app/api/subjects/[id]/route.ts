@@ -35,6 +35,7 @@ export async function PATCH(
     testLabel?: string | null;
     testDate?: string | null;
     cheatsheetMarkdown?: string | null;
+    studyGuideMarkdown?: string | null;
     chatMessages?: ChatMessage[];
     archived?: boolean;
   };
@@ -49,6 +50,7 @@ export async function PATCH(
     testLabel?: string | null;
     testDate?: string | null;
     cheatsheetMarkdown?: string | null;
+    studyGuideMarkdown?: string | null;
     chatMessages?: ChatMessage[];
     archived?: boolean;
   } = {};
@@ -67,6 +69,9 @@ export async function PATCH(
   }
   if (body.cheatsheetMarkdown !== undefined) {
     patch.cheatsheetMarkdown = body.cheatsheetMarkdown;
+  }
+  if (body.studyGuideMarkdown !== undefined) {
+    patch.studyGuideMarkdown = body.studyGuideMarkdown;
   }
   if (body.chatMessages !== undefined) {
     if (!Array.isArray(body.chatMessages)) {

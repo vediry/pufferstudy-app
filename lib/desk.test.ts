@@ -16,6 +16,8 @@ function s(overrides: Partial<Subject> = {}): Subject {
     testDate: overrides.testDate ?? null,
     cheatsheetMarkdown: overrides.cheatsheetMarkdown ?? null,
     cheatsheetGeneratedAt: overrides.cheatsheetGeneratedAt ?? null,
+    studyGuideMarkdown: overrides.studyGuideMarkdown ?? null,
+    studyGuideGeneratedAt: overrides.studyGuideGeneratedAt ?? null,
     chatMessages: overrides.chatMessages ?? [],
     archived: overrides.archived ?? false,
     fileCount: overrides.fileCount ?? 0,
