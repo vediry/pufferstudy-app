@@ -207,7 +207,8 @@ function Taking({
 }) {
   const q = quiz.questions[index];
   const isLast = index === total - 1;
-  const canAdvance = answer.trim().length > 0;
+  const hasAnswer = answer.trim().length > 0;
+  const nextLabel = isLast ? "Submit" : hasAnswer ? "Next" : "Skip";
 
   return (
     <div className="flex flex-col gap-4">
@@ -277,8 +278,12 @@ function Taking({
           <ArrowLeft />
           Previous
         </Button>
-        <Button onClick={onNext} disabled={!canAdvance}>
-          {isLast ? "Submit" : "Next"}
+        <Button
+          onClick={onNext}
+          variant={hasAnswer || isLast ? "primary" : "secondary"}
+          title={!hasAnswer && !isLast ? "Skipped questions are marked wrong on submit" : undefined}
+        >
+          {nextLabel}
           <ArrowRight />
         </Button>
       </div>
