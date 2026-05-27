@@ -15,6 +15,7 @@
   /* Default theme = Gold Atelier (matches lib/themes.ts) */
   :root,
   [data-theme="atelier"] {
+    --lattice-opacity: 0.18;
     --bg: #faf6ec;
     --bg-grad-top: #faf6ec;
     --bg-grad-bottom: #f3ecd9;
@@ -44,6 +45,7 @@
   }
 
   [data-theme="platinum"] {
+    --lattice-opacity: 0.18;
     --bg: #fafbfc;
     --bg-grad-top: #fafbfc;
     --bg-grad-bottom: #eceff3;
@@ -73,6 +75,7 @@
   }
 
   [data-theme="spacegrey"] {
+    --lattice-opacity: 0.4;
     --bg: #1c1b18;
     --bg-grad-top: #2a2926;
     --bg-grad-bottom: #1c1b18;
@@ -102,6 +105,7 @@
   }
 
   [data-theme="midnight"] {
+    --lattice-opacity: 0.45;
     --bg: #0e1320;
     --bg-grad-top: #0e1320;
     --bg-grad-bottom: #060912;
@@ -172,7 +176,7 @@
     background:
       repeating-linear-gradient(45deg, var(--ink-faint) 0 1px, transparent 1px 17px),
       repeating-linear-gradient(-45deg, var(--ink-faint) 0 1px, transparent 1px 17px);
-    opacity: 0.18;
+    opacity: var(--lattice-opacity, 0.18);
     will-change: transform;
     animation: lattice-drift 3s linear infinite;
   }
