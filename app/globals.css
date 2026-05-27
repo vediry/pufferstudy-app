@@ -136,9 +136,6 @@
 
   html, body {
     background:
-      /* Diamond lattice: thin crossed diagonals at +/-45deg forming a bare diamond grid */
-      repeating-linear-gradient(45deg, color-mix(in srgb, var(--ink-faint) 18%, transparent) 0 1px, transparent 1px 17px),
-      repeating-linear-gradient(-45deg, color-mix(in srgb, var(--ink-faint) 18%, transparent) 0 1px, transparent 1px 17px),
       /* Warm radial light leak from bottom-left, pulling color from --accent */
       radial-gradient(ellipse 1100px 600px at 12% 92%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 65%),
       /* Existing top-left ambience */
@@ -146,7 +143,6 @@
       /* Theme gradient */
       linear-gradient(180deg, var(--bg-grad-top) 0%, var(--bg-grad-bottom) 100%);
     background-attachment: fixed;
-    animation: lattice-drift 10s linear infinite;
     color: var(--ink);
     font-family: var(--font-sans);
     font-weight: 500;
@@ -161,6 +157,21 @@
   body {
     min-height: 100vh;
     min-height: 100dvh;
+  }
+
+  /* Animated diamond lattice on a fixed pseudo-element so the GPU compositor handles
+     translate3d (smooth at any speed) instead of repainting the body background each frame. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: -48px;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      repeating-linear-gradient(45deg, color-mix(in srgb, var(--ink-faint) 18%, transparent) 0 1px, transparent 1px 17px),
+      repeating-linear-gradient(-45deg, color-mix(in srgb, var(--ink-faint) 18%, transparent) 0 1px, transparent 1px 17px);
+    will-change: transform;
+    animation: lattice-drift 3s linear infinite;
   }
 
   strong { font-weight: 700; }
@@ -324,12 +335,11 @@
   @page { margin: 0.5in; }
 }
 
-/* Only the two lattice layers drift; the warm light leak, ambience, and theme gradient stay still */
 @keyframes lattice-drift {
-  from { background-position: 0 0, 0 0, 0 0, 0 0, 0 0; }
-  to   { background-position: 24px 0, 24px 0, 0 0, 0 0, 0 0; }
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-24px, 0, 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html, body { animation: none; }
+  body::before { animation: none; }
 }
