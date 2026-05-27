@@ -160,7 +160,9 @@
   }
 
   /* Animated diamond lattice on a fixed pseudo-element so the GPU compositor handles
-     translate3d (smooth at any speed) instead of repainting the body background each frame. */
+     translate3d (smooth at any speed) instead of repainting the body background each frame.
+     Opacity lives on the element (not inside color-mix) because Next's CSS minifier
+     strips color-mix() when nested inside repeating-linear-gradient color stops. */
   body::before {
     content: "";
     position: fixed;
@@ -168,8 +170,9 @@
     z-index: -1;
     pointer-events: none;
     background:
-      repeating-linear-gradient(45deg, color-mix(in srgb, var(--ink-faint) 18%, transparent) 0 1px, transparent 1px 17px),
-      repeating-linear-gradient(-45deg, color-mix(in srgb, var(--ink-faint) 18%, transparent) 0 1px, transparent 1px 17px);
+      repeating-linear-gradient(45deg, var(--ink-faint) 0 1px, transparent 1px 17px),
+      repeating-linear-gradient(-45deg, var(--ink-faint) 0 1px, transparent 1px 17px);
+    opacity: 0.18;
     will-change: transform;
     animation: lattice-drift 3s linear infinite;
   }
