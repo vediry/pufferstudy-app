@@ -136,15 +136,15 @@
 
   html, body {
     background:
-      /* Dot grid: tiny radial dots tiled at 24px spacing using ink-faint */
-      radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--ink-faint) 18%, transparent) 1px, transparent 0),
+      /* Diamond lattice: thin crossed diagonals at +/-45deg forming a bare diamond grid */
+      repeating-linear-gradient(45deg, color-mix(in srgb, var(--ink-faint) 18%, transparent) 0 1px, transparent 1px 17px),
+      repeating-linear-gradient(-45deg, color-mix(in srgb, var(--ink-faint) 18%, transparent) 0 1px, transparent 1px 17px),
       /* Warm radial light leak from bottom-left, pulling color from --accent */
       radial-gradient(ellipse 1100px 600px at 12% 92%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 65%),
       /* Existing top-left ambience */
       radial-gradient(ellipse at top left, color-mix(in srgb, var(--accent) 7%, transparent), transparent 60%),
       /* Theme gradient */
       linear-gradient(180deg, var(--bg-grad-top) 0%, var(--bg-grad-bottom) 100%);
-    background-size: 24px 24px, auto, auto, auto;
     background-attachment: fixed;
     color: var(--ink);
     font-family: var(--font-sans);
