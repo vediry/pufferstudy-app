@@ -15,7 +15,7 @@
   /* Default theme = Gold Atelier (matches lib/themes.ts) */
   :root,
   [data-theme="atelier"] {
-    --aurora-opacity: 0.35;
+    --aurora-opacity: 0.55;
     --bg: #faf6ec;
     --bg-grad-top: #faf6ec;
     --bg-grad-bottom: #f3ecd9;
@@ -45,7 +45,7 @@
   }
 
   [data-theme="platinum"] {
-    --aurora-opacity: 0.3;
+    --aurora-opacity: 0.45;
     --bg: #fafbfc;
     --bg-grad-top: #fafbfc;
     --bg-grad-bottom: #eceff3;
@@ -75,7 +75,7 @@
   }
 
   [data-theme="spacegrey"] {
-    --aurora-opacity: 0.5;
+    --aurora-opacity: 0.75;
     --bg: #1c1b18;
     --bg-grad-top: #2a2926;
     --bg-grad-bottom: #1c1b18;
@@ -105,7 +105,7 @@
   }
 
   [data-theme="midnight"] {
-    --aurora-opacity: 0.55;
+    --aurora-opacity: 0.9;
     --bg: #0e1320;
     --bg-grad-top: #0e1320;
     --bg-grad-bottom: #060912;
@@ -169,22 +169,24 @@
     width: 75vw;
     aspect-ratio: 1;
     border-radius: 50%;
-    filter: blur(120px);
+    filter: blur(80px);
     will-change: transform;
-    opacity: var(--aurora-opacity, 0.4);
+    opacity: var(--aurora-opacity, 0.5);
   }
 
+  /* Explicit color stops keep the inner ~25% of each aura at full color before fading.
+     Otherwise closest-side + blur dilutes the center too much to register. */
   body::before {
     top: -25vw;
     left: -25vw;
-    background: radial-gradient(closest-side, var(--accent), transparent);
+    background: radial-gradient(closest-side, var(--accent), var(--accent) 25%, transparent);
     animation: aurora-drift-1 32s ease-in-out infinite alternate;
   }
 
   body::after {
     bottom: -25vw;
     right: -25vw;
-    background: radial-gradient(closest-side, var(--accent-light), transparent);
+    background: radial-gradient(closest-side, var(--accent-light), var(--accent-light) 25%, transparent);
     animation: aurora-drift-2 44s ease-in-out infinite alternate;
   }
 
