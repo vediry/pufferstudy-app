@@ -15,7 +15,7 @@
   /* Default theme = Gold Atelier (matches lib/themes.ts) */
   :root,
   [data-theme="atelier"] {
-    --lattice-opacity: 0.18;
+    --aurora-opacity: 0.35;
     --bg: #faf6ec;
     --bg-grad-top: #faf6ec;
     --bg-grad-bottom: #f3ecd9;
@@ -45,7 +45,7 @@
   }
 
   [data-theme="platinum"] {
-    --lattice-opacity: 0.18;
+    --aurora-opacity: 0.3;
     --bg: #fafbfc;
     --bg-grad-top: #fafbfc;
     --bg-grad-bottom: #eceff3;
@@ -75,7 +75,7 @@
   }
 
   [data-theme="spacegrey"] {
-    --lattice-opacity: 0.4;
+    --aurora-opacity: 0.5;
     --bg: #1c1b18;
     --bg-grad-top: #2a2926;
     --bg-grad-bottom: #1c1b18;
@@ -105,7 +105,7 @@
   }
 
   [data-theme="midnight"] {
-    --lattice-opacity: 0.45;
+    --aurora-opacity: 0.55;
     --bg: #0e1320;
     --bg-grad-top: #0e1320;
     --bg-grad-bottom: #060912;
@@ -139,13 +139,7 @@
   }
 
   html, body {
-    background:
-      /* Warm radial light leak from bottom-left, pulling color from --accent */
-      radial-gradient(ellipse 1100px 600px at 12% 92%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 65%),
-      /* Existing top-left ambience */
-      radial-gradient(ellipse at top left, color-mix(in srgb, var(--accent) 7%, transparent), transparent 60%),
-      /* Theme gradient */
-      linear-gradient(180deg, var(--bg-grad-top) 0%, var(--bg-grad-bottom) 100%);
+    background: linear-gradient(180deg, var(--bg-grad-top) 0%, var(--bg-grad-bottom) 100%);
     background-attachment: fixed;
     color: var(--ink);
     font-family: var(--font-sans);
@@ -163,22 +157,35 @@
     min-height: 100dvh;
   }
 
-  /* Animated diamond lattice on a fixed pseudo-element so the GPU compositor handles
-     translate3d (smooth at any speed) instead of repainting the body background each frame.
-     Opacity lives on the element (not inside color-mix) because Next's CSS minifier
-     strips color-mix() when nested inside repeating-linear-gradient color stops. */
-  body::before {
+  /* Two large soft auras (one --accent, one --accent-light) that slowly drift around
+     the viewport. Heavy blur is applied once; only transform animates so the GPU
+     compositor moves the pre-rendered bitmap each frame (smooth + cheap). */
+  body::before,
+  body::after {
     content: "";
     position: fixed;
-    inset: -48px;
     z-index: -1;
     pointer-events: none;
-    background:
-      repeating-linear-gradient(45deg, var(--ink-faint) 0 1px, transparent 1px 17px),
-      repeating-linear-gradient(-45deg, var(--ink-faint) 0 1px, transparent 1px 17px);
-    opacity: var(--lattice-opacity, 0.18);
+    width: 75vw;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    filter: blur(120px);
     will-change: transform;
-    animation: lattice-drift 3s linear infinite;
+    opacity: var(--aurora-opacity, 0.4);
+  }
+
+  body::before {
+    top: -25vw;
+    left: -25vw;
+    background: radial-gradient(closest-side, var(--accent), transparent);
+    animation: aurora-drift-1 32s ease-in-out infinite alternate;
+  }
+
+  body::after {
+    bottom: -25vw;
+    right: -25vw;
+    background: radial-gradient(closest-side, var(--accent-light), transparent);
+    animation: aurora-drift-2 44s ease-in-out infinite alternate;
   }
 
   strong { font-weight: 700; }
@@ -342,11 +349,17 @@
   @page { margin: 0.5in; }
 }
 
-@keyframes lattice-drift {
+@keyframes aurora-drift-1 {
   from { transform: translate3d(0, 0, 0); }
-  to   { transform: translate3d(-24px, 0, 0); }
+  to   { transform: translate3d(40vw, 25vh, 0); }
+}
+
+@keyframes aurora-drift-2 {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-30vw, -25vh, 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body::before { animation: none; }
+  body::before,
+  body::after { animation: none; }
 }
