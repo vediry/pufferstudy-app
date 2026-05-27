@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Manrope, Instrument_Serif } from "next/font/google";
 import { ClerkThemedProvider } from "@/components/clerk-themed-provider";
 import { ThemeProvider, ThemeAntiFlashScript } from "@/components/theme-provider";
+import { WallpaperModeProvider } from "@/components/wallpaper-mode";
 import { ChromeShell } from "@/components/chrome-shell";
 import "./globals.css";
 
@@ -47,9 +48,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-dvh">
         <ThemeProvider>
-          <ClerkThemedProvider>
-            <ChromeShell>{children}</ChromeShell>
-          </ClerkThemedProvider>
+          <WallpaperModeProvider>
+            <ClerkThemedProvider>
+              <ChromeShell>{children}</ChromeShell>
+            </ClerkThemedProvider>
+          </WallpaperModeProvider>
         </ThemeProvider>
       </body>
     </html>

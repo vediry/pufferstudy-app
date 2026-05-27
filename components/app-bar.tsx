@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Settings } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { ThemePicker } from "@/components/theme-picker";
+import { WallpaperToggle } from "@/components/wallpaper-mode";
 
 export function AppBar() {
   return (
@@ -17,6 +18,7 @@ export function AppBar() {
         </Link>
         <nav className="flex items-center gap-3">
           <ThemePicker />
+          <WallpaperToggle />
           <Link
             href="/settings"
             aria-label="Settings"

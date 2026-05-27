@@ -146,6 +146,7 @@
       /* Theme gradient */
       linear-gradient(180deg, var(--bg-grad-top) 0%, var(--bg-grad-bottom) 100%);
     background-attachment: fixed;
+    animation: lattice-drift 60s linear infinite;
     color: var(--ink);
     font-family: var(--font-sans);
     font-weight: 500;
@@ -321,4 +322,14 @@
   h3 { font-size: 13pt; }
   a { color: inherit; text-decoration: underline; }
   @page { margin: 0.5in; }
+}
+
+/* Only the two lattice layers drift; the warm light leak, ambience, and theme gradient stay still */
+@keyframes lattice-drift {
+  from { background-position: 0 0, 0 0, 0 0, 0 0, 0 0; }
+  to   { background-position: 24px 0, 24px 0, 0 0, 0 0, 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html, body { animation: none; }
 }

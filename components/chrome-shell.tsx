@@ -4,6 +4,7 @@ import * as React from "react";
 import { usePathname } from "next/navigation";
 import { AppBar } from "@/components/app-bar";
 import { Sidebar, MobileNav } from "@/components/sidebar";
+import { useWallpaperMode } from "@/components/wallpaper-mode";
 
 const AUTH_PREFIXES = ["/sign-in", "/sign-up"];
 
@@ -15,11 +16,20 @@ const AUTH_PREFIXES = ["/sign-in", "/sign-up"];
 export function ChromeShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "/";
   const isAuthRoute = AUTH_PREFIXES.some((p) => pathname.startsWith(p));
+  const { on: wallpaperMode } = useWallpaperMode();
 
   if (isAuthRoute) {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center px-4 py-10">
         {children}
+      </div>
+    );
+  }
+
+  if (wallpaperMode) {
+    return (
+      <div className="flex min-h-dvh flex-col">
+        <AppBar />
       </div>
     );
   }
