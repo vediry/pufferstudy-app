@@ -57,7 +57,7 @@ export function Sidebar() {
 
   return (
     <aside
-      className="no-print sticky top-16 z-30 hidden h-[calc(100dvh-4rem)] w-[72px] shrink-0 flex-col items-center gap-1 border-r border-default py-4 md:flex"
+      className="no-print sticky top-16 z-30 hidden h-[calc(100dvh-4rem)] w-[72px] shrink-0 flex-col items-center gap-1 border-r border-default bg-[color:var(--surface)] py-4 md:flex"
       aria-label="Primary navigation"
     >
       {NAV.map((item) => {
@@ -95,7 +95,7 @@ export function MobileNav() {
 
   return (
     <nav
-      className="no-print fixed inset-x-0 bottom-0 z-40 border-t border-default bg-[color:var(--surface)]/90 backdrop-blur md:hidden"
+      className="no-print fixed inset-x-0 bottom-0 z-40 border-t border-default bg-[color:var(--surface)] md:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       aria-label="Primary navigation"
     >

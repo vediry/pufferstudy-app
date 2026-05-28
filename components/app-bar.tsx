@@ -6,7 +6,7 @@ import { WallpaperToggle } from "@/components/wallpaper-mode";
 
 export function AppBar() {
   return (
-    <header className="no-print sticky top-0 z-40 border-b border-default bg-[color:var(--surface)]/85 backdrop-blur supports-[backdrop-filter]:bg-[color:var(--surface)]/70">
+    <header className="no-print sticky top-0 z-40 border-b border-default bg-[color:var(--surface)]">
       <div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between px-4 sm:px-8">
         <Link href="/" className="group flex items-center gap-2 text-ink no-underline">
           <span
