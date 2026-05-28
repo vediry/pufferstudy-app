@@ -155,6 +155,9 @@
   body {
     min-height: 100vh;
     min-height: 100dvh;
+    /* Without this, body::before/::after with z-index: -1 escape body's stacking
+       context and get painted behind body's own opaque background, hiding them. */
+    isolation: isolate;
   }
 
   /* Interior cove-lighting effect: multiple soft warm washes along the viewport edges.
