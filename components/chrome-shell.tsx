@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { AppBar } from "@/components/app-bar";
 import { Sidebar, MobileNav } from "@/components/sidebar";
 import { useWallpaperMode } from "@/components/wallpaper-mode";
+import { PomodoroTimer } from "@/components/pomodoro-timer";
 
 const AUTH_PREFIXES = ["/sign-in", "/sign-up"];
 
@@ -30,6 +31,7 @@ export function ChromeShell({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex min-h-dvh flex-col">
         <AppBar />
+        <PomodoroTimer />
       </div>
     );
   }
