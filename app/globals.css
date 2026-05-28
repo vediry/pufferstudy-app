@@ -15,7 +15,9 @@
   /* Default theme = Gold Atelier (matches lib/themes.ts) */
   :root,
   [data-theme="atelier"] {
-    --aurora-opacity: 0.55;
+    --aurora-opacity: 0.4;
+    --aurora-color-a: #e8dcc0;
+    --aurora-color-b: #d4c8a8;
     --bg: #faf6ec;
     --bg-grad-top: #faf6ec;
     --bg-grad-bottom: #f3ecd9;
@@ -45,7 +47,9 @@
   }
 
   [data-theme="platinum"] {
-    --aurora-opacity: 0.45;
+    --aurora-opacity: 0.35;
+    --aurora-color-a: #dde0e6;
+    --aurora-color-b: #c8ccd4;
     --bg: #fafbfc;
     --bg-grad-top: #fafbfc;
     --bg-grad-bottom: #eceff3;
@@ -75,7 +79,9 @@
   }
 
   [data-theme="spacegrey"] {
-    --aurora-opacity: 0.75;
+    --aurora-opacity: 0.55;
+    --aurora-color-a: #ddd6c8;
+    --aurora-color-b: #c8bea8;
     --bg: #1c1b18;
     --bg-grad-top: #2a2926;
     --bg-grad-bottom: #1c1b18;
@@ -105,7 +111,9 @@
   }
 
   [data-theme="midnight"] {
-    --aurora-opacity: 0.9;
+    --aurora-opacity: 0.65;
+    --aurora-color-a: #d0d4dc;
+    --aurora-color-b: #b8bcc8;
     --bg: #0e1320;
     --bg-grad-top: #0e1320;
     --bg-grad-bottom: #060912;
@@ -177,19 +185,19 @@
 
   body::before {
     background:
-      /* Bottom edge wide warm wash (like floor cove lighting) */
-      radial-gradient(ellipse 100vw 35vh at 50% 100%, var(--accent), transparent 70%),
+      /* Bottom edge wide cream/grey wash */
+      radial-gradient(ellipse 100vw 35vh at 50% 100%, var(--aurora-color-a), transparent 70%),
       /* Right-side narrow vertical wash */
-      radial-gradient(ellipse 25vw 90vh at 100% 50%, var(--accent-light), transparent 65%);
+      radial-gradient(ellipse 25vw 90vh at 100% 50%, var(--aurora-color-b), transparent 65%);
     animation: aurora-drift-1 35s ease-in-out infinite alternate;
   }
 
   body::after {
     background:
-      /* Top edge wide warm wash (like ceiling cove lighting) */
-      radial-gradient(ellipse 100vw 30vh at 50% 0%, var(--accent-light), transparent 70%),
+      /* Top edge wide cream/grey wash */
+      radial-gradient(ellipse 100vw 30vh at 50% 0%, var(--aurora-color-b), transparent 70%),
       /* Left-side narrow vertical wash */
-      radial-gradient(ellipse 22vw 80vh at 0% 50%, var(--accent), transparent 65%);
+      radial-gradient(ellipse 22vw 80vh at 0% 50%, var(--aurora-color-a), transparent 65%);
     animation: aurora-drift-2 47s ease-in-out infinite alternate;
   }
 
@@ -356,12 +364,12 @@
 
 @keyframes aurora-drift-1 {
   from { transform: translate3d(0, 0, 0); }
-  to   { transform: translate3d(-3vw, -2vh, 0); }
+  to   { transform: translate3d(-8vw, -6vh, 0); }
 }
 
 @keyframes aurora-drift-2 {
   from { transform: translate3d(0, 0, 0); }
-  to   { transform: translate3d(3vw, 2vh, 0); }
+  to   { transform: translate3d(8vw, 6vh, 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
