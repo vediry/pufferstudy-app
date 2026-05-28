@@ -157,37 +157,37 @@
     min-height: 100dvh;
   }
 
-  /* Two large soft auras (one --accent, one --accent-light) that slowly drift around
-     the viewport. Heavy blur is applied once; only transform animates so the GPU
-     compositor moves the pre-rendered bitmap each frame (smooth + cheap). */
+  /* Interior cove-lighting effect: multiple soft warm washes along the viewport edges.
+     Each pseudo-element fills the viewport and contains two elongated radial gradients
+     anchored to opposite edges. Slow opposing drifts produce a comforting breathing feel. */
   body::before,
   body::after {
     content: "";
     position: fixed;
+    inset: 0;
     z-index: -1;
     pointer-events: none;
-    width: 75vw;
-    aspect-ratio: 1;
-    border-radius: 50%;
-    filter: blur(80px);
+    filter: blur(40px);
     will-change: transform;
-    opacity: var(--aurora-opacity, 0.5);
+    opacity: var(--aurora-opacity, 0.6);
   }
 
-  /* Explicit color stops keep the inner ~25% of each aura at full color before fading.
-     Otherwise closest-side + blur dilutes the center too much to register. */
   body::before {
-    top: -25vw;
-    left: -25vw;
-    background: radial-gradient(closest-side, var(--accent), var(--accent) 25%, transparent);
-    animation: aurora-drift-1 32s ease-in-out infinite alternate;
+    background:
+      /* Bottom edge wide warm wash (like floor cove lighting) */
+      radial-gradient(ellipse 100vw 35vh at 50% 100%, var(--accent), transparent 70%),
+      /* Right-side narrow vertical wash */
+      radial-gradient(ellipse 25vw 90vh at 100% 50%, var(--accent-light), transparent 65%);
+    animation: aurora-drift-1 35s ease-in-out infinite alternate;
   }
 
   body::after {
-    bottom: -25vw;
-    right: -25vw;
-    background: radial-gradient(closest-side, var(--accent-light), var(--accent-light) 25%, transparent);
-    animation: aurora-drift-2 44s ease-in-out infinite alternate;
+    background:
+      /* Top edge wide warm wash (like ceiling cove lighting) */
+      radial-gradient(ellipse 100vw 30vh at 50% 0%, var(--accent-light), transparent 70%),
+      /* Left-side narrow vertical wash */
+      radial-gradient(ellipse 22vw 80vh at 0% 50%, var(--accent), transparent 65%);
+    animation: aurora-drift-2 47s ease-in-out infinite alternate;
   }
 
   strong { font-weight: 700; }
@@ -353,12 +353,12 @@
 
 @keyframes aurora-drift-1 {
   from { transform: translate3d(0, 0, 0); }
-  to   { transform: translate3d(40vw, 25vh, 0); }
+  to   { transform: translate3d(-3vw, -2vh, 0); }
 }
 
 @keyframes aurora-drift-2 {
   from { transform: translate3d(0, 0, 0); }
-  to   { transform: translate3d(-30vw, -25vh, 0); }
+  to   { transform: translate3d(3vw, 2vh, 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
