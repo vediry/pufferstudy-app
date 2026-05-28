@@ -1,14 +1,21 @@
 @import "tailwindcss";
 
 @theme {
-  --radius-sm: 6px;
-  --radius: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
+  /* Square mode: all radius tokens zeroed. Revert by restoring 6/12/16/24. */
+  --radius-sm: 0;
+  --radius: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
 
   --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+/* Square mode: override hardcoded rounded-[Xpx] utilities. Circular elements
+   (rounded-full avatars, badges, theme swatches) intentionally excluded. */
+[class*="rounded-["] {
+  border-radius: 0 !important;
 }
 
 @layer base {
