@@ -189,7 +189,9 @@
       radial-gradient(ellipse 100vw 35vh at 50% 100%, var(--aurora-color-a), transparent 70%),
       /* Right-side narrow vertical wash */
       radial-gradient(ellipse 25vw 90vh at 100% 50%, var(--aurora-color-b), transparent 65%);
-    animation: aurora-drift-1 35s ease-in-out infinite alternate;
+    animation:
+      aurora-drift-1 35s ease-in-out infinite alternate,
+      aurora-pulse-1 7s ease-in-out infinite alternate;
   }
 
   body::after {
@@ -198,7 +200,9 @@
       radial-gradient(ellipse 100vw 30vh at 50% 0%, var(--aurora-color-b), transparent 70%),
       /* Left-side narrow vertical wash */
       radial-gradient(ellipse 22vw 80vh at 0% 50%, var(--aurora-color-a), transparent 65%);
-    animation: aurora-drift-2 47s ease-in-out infinite alternate;
+    animation:
+      aurora-drift-2 47s ease-in-out infinite alternate,
+      aurora-pulse-2 11s ease-in-out infinite alternate;
   }
 
   strong { font-weight: 700; }
@@ -370,6 +374,19 @@
 @keyframes aurora-drift-2 {
   from { transform: translate3d(0, 0, 0); }
   to   { transform: translate3d(8vw, 6vh, 0); }
+}
+
+/* Pulse the opacity between ~70% and 100% of the theme-aware --aurora-opacity.
+   Two keyframes with different durations (7s and 11s) so the two pseudo-elements
+   desync from each other AND from the drift cycles (35s/47s). */
+@keyframes aurora-pulse-1 {
+  from { opacity: var(--aurora-opacity, 0.6); }
+  to   { opacity: calc(var(--aurora-opacity, 0.6) * 0.7); }
+}
+
+@keyframes aurora-pulse-2 {
+  from { opacity: calc(var(--aurora-opacity, 0.6) * 0.7); }
+  to   { opacity: var(--aurora-opacity, 0.6); }
 }
 
 @media (prefers-reduced-motion: reduce) {
