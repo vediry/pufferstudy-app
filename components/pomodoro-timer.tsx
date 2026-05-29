@@ -14,8 +14,10 @@ import {
 
 const STATE_KEY = "pufferstudy.pomodoro";
 const SETTINGS_KEY = "pufferstudy.pomodoro-settings";
+const CUSTOM_KEY = "pufferstudy.custom-timer";
 
 type Phase = "focus" | "shortBreak" | "longBreak";
+type Mode = "pomodoro" | "custom";
 
 type Settings = {
   focusMinutes: number;
@@ -25,6 +27,8 @@ type Settings = {
   glowIntensity: number;
   chimeEnabled: boolean;
   notificationsEnabled: boolean;
+  mode: Mode;
+  customMinutes: number;
 };
 
 const DEFAULT_SETTINGS: Settings = {
@@ -35,6 +39,8 @@ const DEFAULT_SETTINGS: Settings = {
   glowIntensity: 3,
   chimeEnabled: true,
   notificationsEnabled: false,
+  mode: "pomodoro",
+  customMinutes: 10,
 };
 
 // Glow stops per intensity level. Numbers are blur radii in px.
@@ -63,6 +69,10 @@ function clampIntensity(v: unknown, fallback: number): number {
   return f;
 }
 
+function isMode(v: unknown): v is Mode {
+  return v === "pomodoro" || v === "custom";
+}
+
 const GLOW_SWATCHES: { name: string; value: string }[] = [
   { name: "Amber", value: "#e8b14b" },
   { name: "Green", value: "#4ade80" },
@@ -84,6 +94,8 @@ const PHASE_END_MSG: Record<Phase, { title: string; body: string }> = {
   shortBreak: { title: "Break over", body: "Back to focus." },
   longBreak: { title: "Long break over", body: "Back to focus." },
 };
+
+const CUSTOM_END_MSG = { title: "Timer complete", body: "Your custom timer is up." };
 
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 
@@ -125,6 +137,38 @@ function loadState(s: Settings): PomodoroState {
   }
 }
 
+type CustomTimerState = {
+  running: boolean;
+  endTime: number | null;
+  remainingSeconds: number;
+};
+
+function defaultCustomState(s: Settings = DEFAULT_SETTINGS): CustomTimerState {
+  return {
+    running: false,
+    endTime: null,
+    remainingSeconds: s.customMinutes * 60,
+  };
+}
+
+function loadCustomState(s: Settings): CustomTimerState {
+  try {
+    const raw = localStorage.getItem(CUSTOM_KEY);
+    if (!raw) return defaultCustomState(s);
+    const parsed = JSON.parse(raw) as Partial<CustomTimerState>;
+    return {
+      running: !!parsed.running,
+      endTime: typeof parsed.endTime === "number" ? parsed.endTime : null,
+      remainingSeconds:
+        typeof parsed.remainingSeconds === "number" && parsed.remainingSeconds >= 0
+          ? Math.floor(parsed.remainingSeconds)
+          : s.customMinutes * 60,
+    };
+  } catch {
+    return defaultCustomState(s);
+  }
+}
+
 function loadSettings(): Settings {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
@@ -145,6 +189,8 @@ function loadSettings(): Settings {
         typeof parsed.notificationsEnabled === "boolean"
           ? parsed.notificationsEnabled
           : DEFAULT_SETTINGS.notificationsEnabled,
+      mode: isMode(parsed.mode) ? parsed.mode : DEFAULT_SETTINGS.mode,
+      customMinutes: clampMinutes(parsed.customMinutes, DEFAULT_SETTINGS.customMinutes),
     };
   } catch {
     return DEFAULT_SETTINGS;
@@ -209,15 +255,14 @@ function playChime() {
   playTone(659.25, now + 0.18, 0.7, 0.16); // E5 overlap
 }
 
-function fireNotification(endedPhase: Phase) {
+function fireNotification(msg: { title: string; body: string }) {
   if (typeof window === "undefined") return;
   if (!("Notification" in window)) return;
   if (Notification.permission !== "granted") return;
   // Don't bug the user if they're actively looking at the tab.
   if (document.visibilityState === "visible") return;
-  const { title, body } = PHASE_END_MSG[endedPhase];
   try {
-    new Notification(title, { body, tag: "pufferstudy-pomodoro" });
+    new Notification(msg.title, { body: msg.body, tag: "pufferstudy-pomodoro" });
   } catch {
     /* notification blocked or unsupported */
   }
@@ -226,6 +271,7 @@ function fireNotification(endedPhase: Phase) {
 export function PomodoroTimer() {
   const [settings, setSettings] = React.useState<Settings>(DEFAULT_SETTINGS);
   const [state, setState] = React.useState<PomodoroState>(defaultState);
+  const [customState, setCustomState] = React.useState<CustomTimerState>(defaultCustomState);
   const [, forceTick] = React.useState(0);
   const [settingsOpen, setSettingsOpen] = React.useState(false);
   const hydratedRef = React.useRef(false);
@@ -234,6 +280,7 @@ export function PomodoroTimer() {
     const s = loadSettings();
     setSettings(s);
     setState(loadState(s));
+    setCustomState(loadCustomState(s));
     hydratedRef.current = true;
   }, []);
 
@@ -247,25 +294,39 @@ export function PomodoroTimer() {
   React.useEffect(() => {
     if (!hydratedRef.current) return;
     try {
+      localStorage.setItem(CUSTOM_KEY, JSON.stringify(customState));
+    } catch {}
+  }, [customState]);
+
+  React.useEffect(() => {
+    if (!hydratedRef.current) return;
+    try {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     } catch {}
   }, [settings]);
 
+  // One ticker drives both timers; whichever is running re-renders via forceTick.
   React.useEffect(() => {
-    if (!state.running) return;
+    if (!state.running && !customState.running) return;
     const id = setInterval(() => forceTick((t) => t + 1), 1000);
     return () => clearInterval(id);
-  }, [state.running]);
+  }, [state.running, customState.running]);
 
-  const displaySeconds =
+  const pomodoroDisplaySeconds =
     state.running && state.endTime
       ? Math.max(0, Math.ceil((state.endTime - Date.now()) / 1000))
       : state.remainingSeconds;
 
+  const customDisplaySeconds =
+    customState.running && customState.endTime
+      ? Math.max(0, Math.ceil((customState.endTime - Date.now()) / 1000))
+      : customState.remainingSeconds;
+
+  // Pomodoro phase-end
   React.useEffect(() => {
-    if (state.running && displaySeconds <= 0) {
+    if (state.running && pomodoroDisplaySeconds <= 0) {
       if (settings.chimeEnabled) playChime();
-      if (settings.notificationsEnabled) fireNotification(state.phase);
+      if (settings.notificationsEnabled) fireNotification(PHASE_END_MSG[state.phase]);
       const nxt = pickNextPhase(state);
       setState({
         phase: nxt,
@@ -275,7 +336,20 @@ export function PomodoroTimer() {
         completedFocusBlocks: nextCompletedBlocks(state),
       });
     }
-  }, [displaySeconds, state, settings]);
+  }, [pomodoroDisplaySeconds, state, settings]);
+
+  // Custom timer end
+  React.useEffect(() => {
+    if (customState.running && customDisplaySeconds <= 0) {
+      if (settings.chimeEnabled) playChime();
+      if (settings.notificationsEnabled) fireNotification(CUSTOM_END_MSG);
+      setCustomState({
+        running: false,
+        endTime: null,
+        remainingSeconds: settings.customMinutes * 60,
+      });
+    }
+  }, [customDisplaySeconds, customState, settings]);
 
   function startOrPause() {
     setState((prev) => {
@@ -335,6 +409,66 @@ export function PomodoroTimer() {
     setSettingsOpen(false);
   }
 
+  function startOrPauseCustom() {
+    setCustomState((prev) => {
+      if (prev.running) {
+        const remaining = prev.endTime
+          ? Math.max(0, Math.ceil((prev.endTime - Date.now()) / 1000))
+          : prev.remainingSeconds;
+        return { running: false, endTime: null, remainingSeconds: remaining };
+      }
+      if (settings.chimeEnabled) getAudioContext();
+      return {
+        running: true,
+        endTime: Date.now() + prev.remainingSeconds * 1000,
+        remainingSeconds: prev.remainingSeconds,
+      };
+    });
+  }
+
+  function resetCustom() {
+    setCustomState({
+      running: false,
+      endTime: null,
+      remainingSeconds: settings.customMinutes * 60,
+    });
+  }
+
+  function updateCustomMinutes(rawValue: number) {
+    const clamped = clampMinutes(rawValue, settings.customMinutes);
+    const prevSeconds = settings.customMinutes * 60;
+    setSettings((prev) => ({ ...prev, customMinutes: clamped }));
+    // If timer is idle on the prior default, snap to new value so the LCD reflects it.
+    setCustomState((prev) =>
+      !prev.running && prev.remainingSeconds === prevSeconds
+        ? { ...prev, remainingSeconds: clamped * 60 }
+        : prev,
+    );
+  }
+
+  function switchMode(next: Mode) {
+    if (settings.mode === next) return;
+    // Pause whichever timer is running so the other mode starts in a known state.
+    if (state.running) {
+      setState((prev) => {
+        const remaining = prev.endTime
+          ? Math.max(0, Math.ceil((prev.endTime - Date.now()) / 1000))
+          : prev.remainingSeconds;
+        return { ...prev, running: false, endTime: null, remainingSeconds: remaining };
+      });
+    }
+    if (customState.running) {
+      setCustomState((prev) => {
+        const remaining = prev.endTime
+          ? Math.max(0, Math.ceil((prev.endTime - Date.now()) / 1000))
+          : prev.remainingSeconds;
+        return { running: false, endTime: null, remainingSeconds: remaining };
+      });
+    }
+    setSettings((prev) => ({ ...prev, mode: next }));
+    setSettingsOpen(false);
+  }
+
   function applyDurations(d: Pick<Settings, "focusMinutes" | "shortBreakMinutes" | "longBreakMinutes">) {
     const merged: Settings = { ...settings, ...d };
     const prevDur = durations(settings)[state.phase];
@@ -358,14 +492,19 @@ export function PomodoroTimer() {
     }
   }
 
-  const minutes = Math.floor(displaySeconds / 60);
-  const seconds = displaySeconds % 60;
+  const isCustom = settings.mode === "custom";
+  const currentSeconds = isCustom ? customDisplaySeconds : pomodoroDisplaySeconds;
+  const minutes = Math.floor(currentSeconds / 60);
+  const seconds = currentSeconds % 60;
   const timeStr = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  const isRunning = isCustom ? customState.running : state.running;
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-6">
-      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-faint">
-        {PHASE_LABELS[state.phase]}
+      <ModeToggle mode={settings.mode} onChange={switchMode} />
+
+      <div className="mt-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-faint">
+        {isCustom ? "Custom timer" : PHASE_LABELS[state.phase]}
       </div>
 
       {/* LCD display: ghost 88:88 behind, glowing time on top, stacked via grid. */}
@@ -400,38 +539,46 @@ export function PomodoroTimer() {
         </span>
       </div>
 
-      <div
-        className="mt-6 flex items-center gap-2"
-        aria-label={`${state.completedFocusBlocks} of 4 focus blocks completed`}
-      >
-        {[0, 1, 2, 3].map((i) => {
-          const filled = i < state.completedFocusBlocks;
-          return (
-            <div
-              key={i}
-              className="h-2 w-2 rounded-full"
-              style={{
-                background: filled
-                  ? settings.glowColor
-                  : "color-mix(in srgb, var(--ink-faint) 35%, transparent)",
-                boxShadow:
-                  filled && settings.glowIntensity > 0
-                    ? `0 0 4px ${settings.glowColor}`
-                    : undefined,
-              }}
-            />
-          );
-        })}
-      </div>
+      {isCustom ? (
+        <CustomMinutesField
+          minutes={settings.customMinutes}
+          onCommit={updateCustomMinutes}
+          disabled={customState.running}
+        />
+      ) : (
+        <div
+          className="mt-6 flex items-center gap-2"
+          aria-label={`${state.completedFocusBlocks} of 4 focus blocks completed`}
+        >
+          {[0, 1, 2, 3].map((i) => {
+            const filled = i < state.completedFocusBlocks;
+            return (
+              <div
+                key={i}
+                className="h-2 w-2 rounded-full"
+                style={{
+                  background: filled
+                    ? settings.glowColor
+                    : "color-mix(in srgb, var(--ink-faint) 35%, transparent)",
+                  boxShadow:
+                    filled && settings.glowIntensity > 0
+                      ? `0 0 4px ${settings.glowColor}`
+                      : undefined,
+                }}
+              />
+            );
+          })}
+        </div>
+      )}
 
       <div className="mt-10 flex items-center gap-3">
         <button
           type="button"
-          onClick={startOrPause}
+          onClick={isCustom ? startOrPauseCustom : startOrPause}
           className="glow-on-hover inline-flex h-12 items-center gap-2 border border-default bg-surface-2 px-6 text-sm font-semibold text-ink"
-          aria-label={state.running ? "Pause timer" : "Start timer"}
+          aria-label={isRunning ? "Pause timer" : "Start timer"}
         >
-          {state.running ? (
+          {isRunning ? (
             <>
               <Pause className="h-4 w-4" strokeWidth={2} /> Pause
             </>
@@ -443,43 +590,47 @@ export function PomodoroTimer() {
         </button>
         <button
           type="button"
-          onClick={reset}
-          aria-label="Reset current phase"
-          title="Reset current phase"
+          onClick={isCustom ? resetCustom : reset}
+          aria-label={isCustom ? "Reset timer" : "Reset current phase"}
+          title={isCustom ? "Reset timer" : "Reset current phase"}
           className="glow-on-hover inline-flex h-12 w-12 items-center justify-center border border-default bg-surface-2 text-ink-muted hover:text-ink"
         >
           <RotateCcw className="h-4 w-4" strokeWidth={2} />
         </button>
-        <button
-          type="button"
-          onClick={skip}
-          aria-label="Skip to next phase"
-          title="Skip to next phase"
-          className="glow-on-hover inline-flex h-12 w-12 items-center justify-center border border-default bg-surface-2 text-ink-muted hover:text-ink"
-        >
-          <SkipForward className="h-4 w-4" strokeWidth={2} />
-        </button>
-        {state.phase === "focus" ? (
-          <button
-            type="button"
-            onClick={takeLongBreak}
-            aria-label="Take a long break now"
-            title="Take a long break now"
-            className="glow-on-hover inline-flex h-12 w-12 items-center justify-center border border-default bg-surface-2 text-ink-muted hover:text-ink"
-          >
-            <Coffee className="h-4 w-4" strokeWidth={2} />
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={endBreak}
-            aria-label="End break and resume focus"
-            title="End break and resume focus"
-            className="glow-on-hover inline-flex h-12 w-12 items-center justify-center border border-default bg-surface-2 text-ink-muted hover:text-ink"
-          >
-            <ArrowRight className="h-4 w-4" strokeWidth={2} />
-          </button>
-        )}
+        {!isCustom ? (
+          <>
+            <button
+              type="button"
+              onClick={skip}
+              aria-label="Skip to next phase"
+              title="Skip to next phase"
+              className="glow-on-hover inline-flex h-12 w-12 items-center justify-center border border-default bg-surface-2 text-ink-muted hover:text-ink"
+            >
+              <SkipForward className="h-4 w-4" strokeWidth={2} />
+            </button>
+            {state.phase === "focus" ? (
+              <button
+                type="button"
+                onClick={takeLongBreak}
+                aria-label="Take a long break now"
+                title="Take a long break now"
+                className="glow-on-hover inline-flex h-12 w-12 items-center justify-center border border-default bg-surface-2 text-ink-muted hover:text-ink"
+              >
+                <Coffee className="h-4 w-4" strokeWidth={2} />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={endBreak}
+                aria-label="End break and resume focus"
+                title="End break and resume focus"
+                className="glow-on-hover inline-flex h-12 w-12 items-center justify-center border border-default bg-surface-2 text-ink-muted hover:text-ink"
+              >
+                <ArrowRight className="h-4 w-4" strokeWidth={2} />
+              </button>
+            )}
+          </>
+        ) : null}
         <button
           type="button"
           onClick={() => setSettingsOpen((v) => !v)}
@@ -502,6 +653,83 @@ export function PomodoroTimer() {
           onCancel={() => setSettingsOpen(false)}
         />
       ) : null}
+    </div>
+  );
+}
+
+function ModeToggle({ mode, onChange }: { mode: Mode; onChange: (next: Mode) => void }) {
+  return (
+    <div className="inline-flex border border-default bg-surface-2 text-[10px] font-semibold uppercase tracking-[0.18em]">
+      {(["pomodoro", "custom"] as const).map((m) => {
+        const active = mode === m;
+        return (
+          <button
+            key={m}
+            type="button"
+            onClick={() => onChange(m)}
+            aria-pressed={active}
+            className={`px-3 py-1.5 transition-colors ${
+              active ? "bg-surface-3 text-ink" : "text-ink-faint hover:text-ink"
+            }`}
+          >
+            {m === "pomodoro" ? "Pomodoro" : "Custom"}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function CustomMinutesField({
+  minutes,
+  onCommit,
+  disabled,
+}: {
+  minutes: number;
+  onCommit: (v: number) => void;
+  disabled: boolean;
+}) {
+  const [draft, setDraft] = React.useState(String(minutes));
+
+  // Sync external changes (e.g. from settings panel) into the local draft.
+  React.useEffect(() => {
+    setDraft(String(minutes));
+  }, [minutes]);
+
+  function commit() {
+    const n = Number(draft);
+    if (Number.isFinite(n) && n >= 1) {
+      onCommit(Math.floor(n));
+    } else {
+      setDraft(String(minutes));
+    }
+  }
+
+  return (
+    <div className="mt-6 flex items-center gap-2">
+      <span className="text-[11px] uppercase tracking-[0.18em] text-ink-faint">Set</span>
+      <input
+        type="number"
+        inputMode="numeric"
+        min={1}
+        max={999}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            commit();
+            (e.currentTarget as HTMLInputElement).blur();
+          }
+          if (e.key === "Escape") {
+            setDraft(String(minutes));
+            (e.currentTarget as HTMLInputElement).blur();
+          }
+        }}
+        disabled={disabled}
+        className="h-8 w-16 border border-default bg-surface-2 px-2 text-right text-sm font-semibold text-ink tabular focus:outline-none focus:border-strong disabled:opacity-50"
+      />
+      <span className="text-[11px] uppercase tracking-[0.18em] text-ink-faint">min</span>
     </div>
   );
 }
@@ -538,7 +766,7 @@ function SettingsPanel({
 
   return (
     <div className="mt-6 w-[320px] border border-default bg-surface p-4">
-      <SectionLabel>Durations</SectionLabel>
+      <SectionLabel>Pomodoro durations</SectionLabel>
       <div className="mt-2 flex flex-col gap-3">
         <Row label="Focus" value={focus} onChange={setFocus} onKey={onKey} />
         <Row label="Short break" value={shortBreak} onChange={setShortBreak} onKey={onKey} />
@@ -622,7 +850,7 @@ function SettingsPanel({
       <SectionLabel>Sound &amp; alerts</SectionLabel>
       <div className="mt-2 flex flex-col gap-2.5">
         <Toggle
-          label="Chime when phase ends"
+          label="Chime when timer ends"
           checked={settings.chimeEnabled}
           onChange={(v) => onUpdateLive({ chimeEnabled: v })}
         />
