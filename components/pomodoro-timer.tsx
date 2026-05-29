@@ -22,6 +22,7 @@ type Settings = {
   shortBreakMinutes: number;
   longBreakMinutes: number;
   glowColor: string;
+  glowIntensity: number;
   chimeEnabled: boolean;
   notificationsEnabled: boolean;
 };
@@ -31,9 +32,36 @@ const DEFAULT_SETTINGS: Settings = {
   shortBreakMinutes: 5,
   longBreakMinutes: 15,
   glowColor: "#e8b14b",
+  glowIntensity: 3,
   chimeEnabled: true,
   notificationsEnabled: false,
 };
+
+// Glow stops per intensity level. Numbers are blur radii in px.
+// Level 3 (strong) matches the original 4-layer stack shipped in 1a0c3da.
+const GLOW_STOPS: Record<number, number[]> = {
+  0: [],
+  1: [2, 5],
+  2: [3, 9, 18],
+  3: [4, 12, 26, 50],
+  4: [6, 16, 36, 72, 120],
+};
+
+const GLOW_LEVEL_LABELS = ["Off", "Soft", "Medium", "Strong", "Extreme"];
+
+function glowShadow(color: string, level: number): string | undefined {
+  const stops = GLOW_STOPS[level] ?? GLOW_STOPS[3];
+  if (stops.length === 0) return undefined;
+  return stops.map((blur) => `0 0 ${blur}px ${color}`).join(", ");
+}
+
+function clampIntensity(v: unknown, fallback: number): number {
+  const n = typeof v === "number" ? v : Number(v);
+  if (!Number.isFinite(n)) return fallback;
+  const f = Math.floor(n);
+  if (f < 0 || f > 4) return fallback;
+  return f;
+}
 
 const GLOW_SWATCHES: { name: string; value: string }[] = [
   { name: "Amber", value: "#e8b14b" },
@@ -110,6 +138,7 @@ function loadSettings(): Settings {
         typeof parsed.glowColor === "string" && HEX_RE.test(parsed.glowColor)
           ? parsed.glowColor
           : DEFAULT_SETTINGS.glowColor,
+      glowIntensity: clampIntensity(parsed.glowIntensity, DEFAULT_SETTINGS.glowIntensity),
       chimeEnabled:
         typeof parsed.chimeEnabled === "boolean" ? parsed.chimeEnabled : DEFAULT_SETTINGS.chimeEnabled,
       notificationsEnabled:
@@ -364,7 +393,7 @@ export function PomodoroTimer() {
           style={{
             color: settings.glowColor,
             gridArea: "1 / 1",
-            textShadow: `0 0 4px ${settings.glowColor}, 0 0 12px ${settings.glowColor}, 0 0 26px ${settings.glowColor}, 0 0 50px ${settings.glowColor}`,
+            textShadow: glowShadow(settings.glowColor, settings.glowIntensity),
           }}
         >
           {timeStr}
@@ -385,7 +414,10 @@ export function PomodoroTimer() {
                 background: filled
                   ? settings.glowColor
                   : "color-mix(in srgb, var(--ink-faint) 35%, transparent)",
-                boxShadow: filled ? `0 0 4px ${settings.glowColor}` : undefined,
+                boxShadow:
+                  filled && settings.glowIntensity > 0
+                    ? `0 0 4px ${settings.glowColor}`
+                    : undefined,
               }}
             />
           );
@@ -563,6 +595,26 @@ function SettingsPanel({
             className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
           />
         </label>
+      </div>
+
+      <Divider />
+
+      <SectionLabel>Glow strength</SectionLabel>
+      <div className="mt-2 flex items-center gap-3">
+        <input
+          type="range"
+          min={0}
+          max={4}
+          step={1}
+          value={settings.glowIntensity}
+          onChange={(e) => onUpdateLive({ glowIntensity: Number(e.target.value) })}
+          aria-label="Glow strength"
+          className="flex-1 cursor-pointer"
+          style={{ accentColor: settings.glowColor }}
+        />
+        <span className="w-16 text-right text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-faint">
+          {GLOW_LEVEL_LABELS[settings.glowIntensity] ?? "Strong"}
+        </span>
       </div>
 
       <Divider />
