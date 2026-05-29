@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+/* DSEG7 Classic — 7-segment LCD font for the Pomodoro timer.
+   Self-hosted under public/fonts. SIL OFL 1.1 license bundled alongside. */
+@font-face {
+  font-family: "DSEG7 Classic";
+  src: url("/fonts/DSEG7Classic-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
   /* Square mode: all radius tokens zeroed. Revert by restoring 6/12/16/24. */
   --radius-sm: 0;
