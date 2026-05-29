@@ -23,7 +23,10 @@ type Settings = {
   focusMinutes: number;
   shortBreakMinutes: number;
   longBreakMinutes: number;
-  glowColor: string;
+  focusGlow: string;
+  shortBreakGlow: string;
+  longBreakGlow: string;
+  customGlow: string;
   glowIntensity: number;
   chimeEnabled: boolean;
   notificationsEnabled: boolean;
@@ -35,13 +38,23 @@ const DEFAULT_SETTINGS: Settings = {
   focusMinutes: 25,
   shortBreakMinutes: 5,
   longBreakMinutes: 15,
-  glowColor: "#e8b14b",
+  focusGlow: "#e8b14b", // amber — warm, attention-grabbing
+  shortBreakGlow: "#86efac", // soft green — relax, refresh
+  longBreakGlow: "#a78bfa", // violet — deep rest
+  customGlow: "#e8b14b", // amber — neutral starting point for free-form timers
   glowIntensity: 3,
   chimeEnabled: true,
   notificationsEnabled: false,
   mode: "pomodoro",
   customMinutes: 10,
 };
+
+function effectiveGlowColor(s: Settings, mode: Mode, phase: Phase): string {
+  if (mode === "custom") return s.customGlow;
+  if (phase === "focus") return s.focusGlow;
+  if (phase === "shortBreak") return s.shortBreakGlow;
+  return s.longBreakGlow;
+}
 
 // Glow stops per intensity level. Numbers are blur radii in px.
 // Level 3 (strong) matches the original 4-layer stack shipped in 1a0c3da.
@@ -173,15 +186,28 @@ function loadSettings(): Settings {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
     if (!raw) return DEFAULT_SETTINGS;
-    const parsed = JSON.parse(raw) as Partial<Settings>;
+    const parsed = JSON.parse(raw) as Partial<Settings> & { glowColor?: string };
+
+    // Migration: pre-per-phase saves had a single `glowColor`. If new per-phase
+    // fields aren't present, fall the new fields back to that legacy value so
+    // the visual look doesn't change on first load.
+    const legacyGlow =
+      typeof parsed.glowColor === "string" && HEX_RE.test(parsed.glowColor)
+        ? parsed.glowColor
+        : null;
+    const pickGlow = (v: unknown, fallback: string): string => {
+      if (typeof v === "string" && HEX_RE.test(v)) return v;
+      return legacyGlow ?? fallback;
+    };
+
     return {
       focusMinutes: clampMinutes(parsed.focusMinutes, DEFAULT_SETTINGS.focusMinutes),
       shortBreakMinutes: clampMinutes(parsed.shortBreakMinutes, DEFAULT_SETTINGS.shortBreakMinutes),
       longBreakMinutes: clampMinutes(parsed.longBreakMinutes, DEFAULT_SETTINGS.longBreakMinutes),
-      glowColor:
-        typeof parsed.glowColor === "string" && HEX_RE.test(parsed.glowColor)
-          ? parsed.glowColor
-          : DEFAULT_SETTINGS.glowColor,
+      focusGlow: pickGlow(parsed.focusGlow, DEFAULT_SETTINGS.focusGlow),
+      shortBreakGlow: pickGlow(parsed.shortBreakGlow, DEFAULT_SETTINGS.shortBreakGlow),
+      longBreakGlow: pickGlow(parsed.longBreakGlow, DEFAULT_SETTINGS.longBreakGlow),
+      customGlow: pickGlow(parsed.customGlow, DEFAULT_SETTINGS.customGlow),
       glowIntensity: clampIntensity(parsed.glowIntensity, DEFAULT_SETTINGS.glowIntensity),
       chimeEnabled:
         typeof parsed.chimeEnabled === "boolean" ? parsed.chimeEnabled : DEFAULT_SETTINGS.chimeEnabled,
@@ -498,6 +524,7 @@ export function PomodoroTimer() {
   const seconds = currentSeconds % 60;
   const timeStr = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
   const isRunning = isCustom ? customState.running : state.running;
+  const currentGlow = effectiveGlowColor(settings, settings.mode, state.phase);
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-6">
@@ -520,7 +547,7 @@ export function PomodoroTimer() {
           aria-hidden
           className="text-[5.5rem] sm:text-[8rem]"
           style={{
-            color: settings.glowColor,
+            color: currentGlow,
             opacity: 0.08,
             gridArea: "1 / 1",
           }}
@@ -530,9 +557,9 @@ export function PomodoroTimer() {
         <span
           className="text-[5.5rem] sm:text-[8rem]"
           style={{
-            color: settings.glowColor,
+            color: currentGlow,
             gridArea: "1 / 1",
-            textShadow: glowShadow(settings.glowColor, settings.glowIntensity),
+            textShadow: glowShadow(currentGlow, settings.glowIntensity),
           }}
         >
           {timeStr}
@@ -558,11 +585,11 @@ export function PomodoroTimer() {
                 className="h-2 w-2 rounded-full"
                 style={{
                   background: filled
-                    ? settings.glowColor
+                    ? settings.focusGlow
                     : "color-mix(in srgb, var(--ink-faint) 35%, transparent)",
                   boxShadow:
                     filled && settings.glowIntensity > 0
-                      ? `0 0 4px ${settings.glowColor}`
+                      ? `0 0 4px ${settings.focusGlow}`
                       : undefined,
                 }}
               />
@@ -648,6 +675,7 @@ export function PomodoroTimer() {
       {settingsOpen ? (
         <SettingsPanel
           settings={settings}
+          currentGlow={currentGlow}
           onApplyDurations={applyDurations}
           onUpdateLive={updateLive}
           onCancel={() => setSettingsOpen(false)}
@@ -736,11 +764,13 @@ function CustomMinutesField({
 
 function SettingsPanel({
   settings,
+  currentGlow,
   onApplyDurations,
   onUpdateLive,
   onCancel,
 }: {
   settings: Settings;
+  currentGlow: string;
   onApplyDurations: (
     next: Pick<Settings, "focusMinutes" | "shortBreakMinutes" | "longBreakMinutes">,
   ) => void;
@@ -783,46 +813,27 @@ function SettingsPanel({
       <Divider />
 
       <SectionLabel>Glow color</SectionLabel>
-      <div className="mt-2 flex items-center gap-2">
-        {GLOW_SWATCHES.map((s) => {
-          const active = settings.glowColor.toLowerCase() === s.value.toLowerCase();
-          return (
-            <button
-              key={s.value}
-              type="button"
-              onClick={() => onUpdateLive({ glowColor: s.value })}
-              aria-label={`Glow color: ${s.name}`}
-              title={s.name}
-              className="h-6 w-6 rounded-full border transition-shadow"
-              style={{
-                background: s.value,
-                borderColor: active
-                  ? "var(--ink)"
-                  : "color-mix(in srgb, var(--border) 60%, transparent)",
-                boxShadow: active ? `0 0 6px ${s.value}, 0 0 14px ${s.value}` : undefined,
-              }}
-            />
-          );
-        })}
-        <label
-          className="relative ml-1 inline-block h-6 w-6 cursor-pointer overflow-hidden rounded-full border border-default"
-          title="Custom color"
-          aria-label="Custom glow color"
-        >
-          <span
-            className="absolute inset-0 rounded-full"
-            style={{
-              background:
-                "conic-gradient(#ef4444, #eab308, #22c55e, #06b6d4, #6366f1, #d946ef, #ef4444)",
-            }}
-          />
-          <input
-            type="color"
-            value={settings.glowColor}
-            onChange={(e) => onUpdateLive({ glowColor: e.target.value })}
-            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-          />
-        </label>
+      <div className="mt-2 flex flex-col gap-2">
+        <SwatchRow
+          label="Focus"
+          value={settings.focusGlow}
+          onChange={(v) => onUpdateLive({ focusGlow: v })}
+        />
+        <SwatchRow
+          label="Short break"
+          value={settings.shortBreakGlow}
+          onChange={(v) => onUpdateLive({ shortBreakGlow: v })}
+        />
+        <SwatchRow
+          label="Long break"
+          value={settings.longBreakGlow}
+          onChange={(v) => onUpdateLive({ longBreakGlow: v })}
+        />
+        <SwatchRow
+          label="Custom"
+          value={settings.customGlow}
+          onChange={(v) => onUpdateLive({ customGlow: v })}
+        />
       </div>
 
       <Divider />
@@ -838,7 +849,7 @@ function SettingsPanel({
           onChange={(e) => onUpdateLive({ glowIntensity: Number(e.target.value) })}
           aria-label="Glow strength"
           className="flex-1 cursor-pointer"
-          style={{ accentColor: settings.glowColor }}
+          style={{ accentColor: currentGlow }}
         />
         <span className="w-16 text-right text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-faint">
           {GLOW_LEVEL_LABELS[settings.glowIntensity] ?? "Strong"}
@@ -933,5 +944,62 @@ function Toggle({
       </span>
       <span className="text-sm text-ink-muted">{label}</span>
     </button>
+  );
+}
+
+function SwatchRow({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (color: string) => void;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="w-[84px] text-xs text-ink-muted">{label}</span>
+      <div className="flex items-center gap-1.5">
+        {GLOW_SWATCHES.map((s) => {
+          const active = value.toLowerCase() === s.value.toLowerCase();
+          return (
+            <button
+              key={s.value}
+              type="button"
+              onClick={() => onChange(s.value)}
+              aria-label={`${label} glow: ${s.name}`}
+              title={s.name}
+              className="h-5 w-5 rounded-full border transition-shadow"
+              style={{
+                background: s.value,
+                borderColor: active
+                  ? "var(--ink)"
+                  : "color-mix(in srgb, var(--border) 60%, transparent)",
+                boxShadow: active ? `0 0 4px ${s.value}, 0 0 10px ${s.value}` : undefined,
+              }}
+            />
+          );
+        })}
+        <label
+          className="relative ml-0.5 inline-block h-5 w-5 cursor-pointer overflow-hidden rounded-full border border-default"
+          title={`Custom ${label.toLowerCase()} color`}
+          aria-label={`Custom ${label} glow color`}
+        >
+          <span
+            className="absolute inset-0 rounded-full"
+            style={{
+              background:
+                "conic-gradient(#ef4444, #eab308, #22c55e, #06b6d4, #6366f1, #d946ef, #ef4444)",
+            }}
+          />
+          <input
+            type="color"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+          />
+        </label>
+      </div>
+    </div>
   );
 }
