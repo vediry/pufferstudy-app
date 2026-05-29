@@ -10,6 +10,8 @@ import {
   Check,
   Coffee,
   ArrowRight,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 
 const STATE_KEY = "pufferstudy.pomodoro";
@@ -300,7 +302,26 @@ export function PomodoroTimer() {
   const [customState, setCustomState] = React.useState<CustomTimerState>(defaultCustomState);
   const [, forceTick] = React.useState(0);
   const [settingsOpen, setSettingsOpen] = React.useState(false);
+  const [minimalView, setMinimalView] = React.useState(false);
   const hydratedRef = React.useRef(false);
+
+  // ESC exits minimal view. Runtime-only state — refresh always starts with full chrome.
+  React.useEffect(() => {
+    if (!minimalView) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setMinimalView(false);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [minimalView]);
+
+  function toggleMinimal() {
+    setMinimalView((prev) => {
+      const next = !prev;
+      if (next) setSettingsOpen(false);
+      return next;
+    });
+  }
 
   React.useEffect(() => {
     const s = loadSettings();
@@ -525,12 +546,23 @@ export function PomodoroTimer() {
   const timeStr = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
   const isRunning = isCustom ? customState.running : state.running;
   const currentGlow = effectiveGlowColor(settings, settings.mode, state.phase);
+  const chromeClass = minimalView
+    ? "transition-opacity duration-300 opacity-0 group-hover:opacity-100 focus-within:opacity-100"
+    : "";
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center px-6">
-      <ModeToggle mode={settings.mode} onChange={switchMode} />
+    <div
+      className={`flex flex-1 flex-col items-center justify-center px-6 ${
+        minimalView ? "group" : ""
+      }`}
+    >
+      <div className={`inline-flex ${chromeClass}`}>
+        <ModeToggle mode={settings.mode} onChange={switchMode} />
+      </div>
 
-      <div className="mt-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-faint">
+      <div
+        className={`mt-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-faint ${chromeClass}`}
+      >
         {isCustom ? "Custom timer" : PHASE_LABELS[state.phase]}
       </div>
 
@@ -567,14 +599,16 @@ export function PomodoroTimer() {
       </div>
 
       {isCustom ? (
-        <CustomMinutesField
-          minutes={settings.customMinutes}
-          onCommit={updateCustomMinutes}
-          disabled={customState.running}
-        />
+        <div className={chromeClass}>
+          <CustomMinutesField
+            minutes={settings.customMinutes}
+            onCommit={updateCustomMinutes}
+            disabled={customState.running}
+          />
+        </div>
       ) : (
         <div
-          className="mt-6 flex items-center gap-2"
+          className={`mt-6 flex items-center gap-2 ${chromeClass}`}
           aria-label={`${state.completedFocusBlocks} of 4 focus blocks completed`}
         >
           {[0, 1, 2, 3].map((i) => {
@@ -598,7 +632,7 @@ export function PomodoroTimer() {
         </div>
       )}
 
-      <div className="mt-10 flex items-center gap-3">
+      <div className={`mt-10 flex items-center gap-3 ${chromeClass}`}>
         <button
           type="button"
           onClick={isCustom ? startOrPauseCustom : startOrPause}
@@ -660,6 +694,22 @@ export function PomodoroTimer() {
         ) : null}
         <button
           type="button"
+          onClick={toggleMinimal}
+          aria-label={minimalView ? "Exit focus view" : "Enter focus view"}
+          aria-pressed={minimalView}
+          title={minimalView ? "Exit focus view (Esc)" : "Focus view — hide everything but the timer"}
+          className={`glow-on-hover inline-flex h-12 w-12 items-center justify-center border border-default text-ink-muted hover:text-ink ${
+            minimalView ? "bg-surface-3 text-ink" : "bg-surface-2"
+          }`}
+        >
+          {minimalView ? (
+            <Minimize2 className="h-4 w-4" strokeWidth={2} />
+          ) : (
+            <Maximize2 className="h-4 w-4" strokeWidth={2} />
+          )}
+        </button>
+        <button
+          type="button"
           onClick={() => setSettingsOpen((v) => !v)}
           aria-label="Customize timer"
           aria-expanded={settingsOpen}
@@ -673,13 +723,15 @@ export function PomodoroTimer() {
       </div>
 
       {settingsOpen ? (
-        <SettingsPanel
-          settings={settings}
-          currentGlow={currentGlow}
-          onApplyDurations={applyDurations}
-          onUpdateLive={updateLive}
-          onCancel={() => setSettingsOpen(false)}
-        />
+        <div className={chromeClass}>
+          <SettingsPanel
+            settings={settings}
+            currentGlow={currentGlow}
+            onApplyDurations={applyDurations}
+            onUpdateLive={updateLive}
+            onCancel={() => setSettingsOpen(false)}
+          />
+        </div>
       ) : null}
     </div>
   );
