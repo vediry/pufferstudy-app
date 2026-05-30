@@ -20,8 +20,8 @@ Move PufferStudy away from its current cream/gold editorial aesthetic — which 
 |---|---|---|
 | Direction | Soft & Cozy | Warm pastels, soft rounded cards, gentle shadows, generous whitespace. |
 | Font | **Figtree** (humanist sans) | Replaces Manrope (body) + Instrument Serif (wordmark). Warm but grown-up — not childish. |
-| Themes | **Oat, Sage, Cocoa, Plum** | Replace Gold Atelier / Platinum / Space Grey / Midnight. 4-slot picker stays. |
-| Default theme | **Cocoa** (warm-charcoal dark) | App opens in Cocoa; light themes available in picker. |
+| Themes | **Latte, Oat, Sage, Cocoa, Plum** | Five cozy themes replace the old four (Gold Atelier / Platinum / Space Grey / Midnight). Picker grows to 5 slots. |
+| Default theme | **Latte** (dimmed warm cream light) | App opens in Latte — a softer, toasted cream (warm beige surfaces, not white). Cocoa and the rest available in the picker. |
 | Corners | Rounded again | ~18px cards, ~13px buttons. Reverses the recent square-corners work. Pills/avatars unchanged. |
 | Shadows | Soft warm ambient shadow + small hover lift | Replaces the accent glow-ring as the default card treatment. |
 | Background | Keep aurora, recolored warm + softened | Per-theme warm tones. |
@@ -29,7 +29,15 @@ Move PufferStudy away from its current cream/gold editorial aesthetic — which 
 
 ## Theme palettes
 
-Four themes, same warm DNA. Two light, two dark (warm charcoals, never cold grey). Hex values below are the starting design intent — fine to fine-tune during implementation, but the mood per theme is fixed.
+Five themes, same warm DNA. Three light, two dark (warm charcoals, never cold grey). Hex values below are the starting design intent — fine to fine-tune during implementation, but the mood per theme is fixed.
+
+### Latte (light) — DEFAULT
+- `--bg` `#e9e0d0` · `--surface` `#f1ebdd` · `--surface-2` `#e4d9c4`
+- `--ink` `#3d362e` · `--ink-muted` `#7a6f5c` · `--ink-faint` `#9c8e76`
+- `--accent` `#c98a6d` (clay-peach) · secondary sage `#a7c4a0`
+- `--border` `#ddd0ba`
+- A dimmed, toasted cream — warm beige surfaces, never stark white. Cozy and easy on the eyes while staying a light theme. This is the first thing every user sees on load. Sits between the brighter Oat and a darker mood.
+- Swatch: warm cream → clay gradient.
 
 ### Oat (light)
 - `--bg` `#f4efe7` · `--surface` `#fdfbf7` · `--surface-2` `#f0e8da`
@@ -99,7 +107,9 @@ Existing users have a theme id persisted (localStorage + Clerk metadata). Map le
 | `platinum` | `sage` |
 | `spacegrey` | `cocoa` |
 | `midnight` | `plum` |
-| anything else / unset | `cocoa` (default) |
+| anything else / unset | `latte` (default) |
+
+(Note: `platinum` was a cool-grey light theme; it maps to `sage` as the nearest cozy light. Existing `atelier` users keep the brightest cozy light, `oat`. New/unset users land on `latte`.)
 
 Extend the existing migration in `theme-provider.tsx` / `lib/themes.ts` (which already migrates legacy v2.0–v2.2 ids). Update `lib/themes.test.ts` to cover the new ids and the legacy→cozy mapping.
 
@@ -107,7 +117,7 @@ Extend the existing migration in `theme-provider.tsx` / `lib/themes.ts` (which a
 
 - `lib/themes.ts` — replace `ThemeId` union + `THEMES` array + swatches; migration map.
 - `lib/themes.test.ts` — update id assertions + migration cases.
-- `components/theme-provider.tsx` — default `cocoa`, migrate stored ids.
+- `components/theme-provider.tsx` — default `latte`, migrate stored ids. **Also update the inline `ThemeAntiFlashScript`** — it hardcodes the valid-id list, the legacy map, and the default; those must match `lib/themes.ts` or the anti-flash script will fall back wrong.
 - `components/theme-picker.tsx` — new names + swatch gradients.
 - `app/layout.tsx` — Figtree import; remove Manrope + Instrument Serif.
 - `app/globals.css` — radius tokens, card shadows, `.glow-card` radius, aurora recolor.
@@ -117,7 +127,7 @@ Extend the existing migration in `theme-provider.tsx` / `lib/themes.ts` (which a
 
 ## Success criteria
 
-- Every page renders in all four cozy themes with no contrast/legibility regressions; Cocoa is the default on a fresh load.
+- Every page renders in all five cozy themes with no contrast/legibility regressions; Latte is the default on a fresh load.
 - A user who had Gold Atelier / Platinum / Space Grey / Midnight saved lands on the mapped cozy theme, not a broken/blank theme.
 - Corners are rounded, cards have soft warm shadows, Figtree is the only UI font, wordmark reads "Puffer**Study**" in Figtree.
 - Puffer appears in at least the primary empty states and one celebration moment, using the custom asset when present and the inline SVG otherwise.
