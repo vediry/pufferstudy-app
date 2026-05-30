@@ -29,6 +29,13 @@ const NAV: NavItem[] = [
   { label: "Practice", href: "/practice", icon: HelpCircle, matchPrefix: "/practice" },
 ];
 
+// Desktop sidebar groups the destinations into labelled sections.
+// (MobileNav keeps the flat NAV so the bottom bar stays a single row.)
+const NAV_GROUPS: { heading: string; items: NavItem[] }[] = [
+  { heading: "Workspace", items: NAV.slice(0, 3) },
+  { heading: "Study tools", items: NAV.slice(3) },
+];
+
 function useIsActive() {
   const pathname = usePathname();
   return React.useCallback(
@@ -48,7 +55,8 @@ function activeGlow(): React.CSSProperties {
 }
 
 /**
- * Desktop: narrow vertical rail on the left.
+ * Desktop: labelled, grouped sidebar on the left (~212px). Sits below the AppBar
+ * (which owns the wordmark), so the rail itself is just the grouped destinations.
  * Mobile: horizontal bottom bar (rendered as <MobileNav/> separately so the
  * desktop sticky-aside math doesn't fight the mobile fixed positioning).
  */
@@ -57,30 +65,36 @@ export function Sidebar() {
 
   return (
     <aside
-      className="no-print sticky top-16 z-30 hidden h-[calc(100dvh-4rem)] w-[72px] shrink-0 flex-col items-center gap-1 border-r border-default bg-[color:var(--surface)] py-4 md:flex"
+      className="no-print sticky top-16 z-30 hidden h-[calc(100dvh-4rem)] w-[212px] shrink-0 flex-col gap-5 overflow-y-auto border-r border-default bg-[color:var(--surface)] px-3 py-5 md:flex"
       aria-label="Primary navigation"
     >
-      {NAV.map((item) => {
-        const Icon = item.icon;
-        const active = isActive(item);
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            aria-current={active ? "page" : undefined}
-            title={item.label}
-            className={`glow-on-hover group flex w-[56px] flex-col items-center gap-1 rounded-[10px] px-1 py-2 transition-colors ${
-              active
-                ? "bg-surface-2 text-[color:var(--accent-deep)]"
-                : "text-ink-muted hover:text-ink"
-            }`}
-            style={active ? activeGlow() : undefined}
-          >
-            <Icon className="h-[22px] w-[22px]" strokeWidth={1.75} />
-            <span className="text-[10px] font-semibold leading-tight">{item.label}</span>
-          </Link>
-        );
-      })}
+      {NAV_GROUPS.map((group) => (
+        <div key={group.heading} className="flex flex-col gap-1">
+          <span className="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-ink-faint">
+            {group.heading}
+          </span>
+          {group.items.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                className={`glow-on-hover group flex items-center gap-3 rounded-[10px] px-3 py-2 transition-colors ${
+                  active
+                    ? "bg-surface-2 text-[color:var(--accent-deep)]"
+                    : "text-ink-muted hover:text-ink"
+                }`}
+                style={active ? activeGlow() : undefined}
+              >
+                <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={1.75} />
+                <span className="text-[13px] font-semibold leading-tight">{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      ))}
     </aside>
   );
 }

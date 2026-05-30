@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Puffer } from "@/components/puffer";
 import {
   useDecks,
   deleteDeck,
@@ -166,12 +167,7 @@ function ErrorBanner({ message }: { message: string }) {
 function NoSubjectsYet() {
   return (
     <div className="glow-card flex flex-col items-center gap-3 border border-default border-dashed bg-surface-2/40 px-6 py-12 text-center">
-      <div
-        className="flex h-12 w-12 items-center justify-center rounded-[12px] border border-default"
-        style={{ background: "var(--surface)", color: "var(--accent-deep)" }}
-      >
-        <Layers className="h-6 w-6" strokeWidth={1.5} />
-      </div>
+      <Puffer size={96} />
       <h3
         className="text-[1.2rem] leading-tight"
         style={{ fontFamily: "var(--font-serif)", fontWeight: 400 }}

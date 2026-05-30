@@ -8,10 +8,10 @@ import {
   RotateCcw,
   Check,
   Sparkles,
-  PartyPopper,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Puffer } from "@/components/puffer";
 import {
   fetchDeck,
   reviewCard,
@@ -227,12 +227,7 @@ function SessionComplete({
 }) {
   return (
     <div className="glow-card flex flex-col items-center gap-3 border border-default bg-surface px-6 py-16 text-center">
-      <div
-        className="flex h-14 w-14 items-center justify-center rounded-[12px] border border-default"
-        style={{ background: "var(--surface-2)", color: "var(--accent-deep)" }}
-      >
-        <PartyPopper className="h-7 w-7" strokeWidth={1.5} />
-      </div>
+      <Puffer size={112} mood="happy" />
       <h2
         className="text-[1.5rem] leading-tight"
         style={{ fontFamily: "var(--font-serif)", fontWeight: 400 }}

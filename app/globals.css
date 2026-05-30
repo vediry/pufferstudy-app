@@ -441,3 +441,24 @@
   body::before,
   body::after { animation: none; }
 }
+
+/* Happy mascot (celebration screens): gentle bounce/wiggle + an accent-colored
+   drop-shadow halo that follows the puffer's silhouette (drop-shadow respects
+   the PNG's alpha, unlike box-shadow). The halo always renders; only the bounce
+   is dropped for reduced-motion users. */
+@keyframes puffer-bounce {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25%      { transform: translateY(-6px) rotate(-3deg); }
+  50%      { transform: translateY(0) rotate(0deg); }
+  75%      { transform: translateY(-4px) rotate(3deg); }
+}
+
+.puffer-happy {
+  animation: puffer-bounce 1.6s ease-in-out infinite;
+  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--accent) 55%, transparent));
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .puffer-happy { animation: none; }
+}

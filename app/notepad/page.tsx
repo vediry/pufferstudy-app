@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { NotebookPen, Plus, Trash2, FileText, Check, Loader2 } from "lucide-react";
+import { Plus, Trash2, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Puffer } from "@/components/puffer";
 import { formatRelativeTime } from "@/lib/desk";
 import {
   useNotes,
@@ -312,16 +313,7 @@ function SaveIndicator({ state }: { state: SaveState }) {
 function EmptyEditor({ onNew, hasAny }: { onNew: () => void; hasAny: boolean }) {
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-6 py-16 text-center">
-      <div
-        className="flex h-12 w-12 items-center justify-center rounded-[12px] border border-default"
-        style={{ background: "var(--surface-2)", color: "var(--accent-deep)" }}
-      >
-        {hasAny ? (
-          <FileText className="h-6 w-6" strokeWidth={1.5} />
-        ) : (
-          <NotebookPen className="h-6 w-6" strokeWidth={1.5} />
-        )}
-      </div>
+      <Puffer size={96} />
       <h2
         className="text-[1.3rem] leading-tight"
         style={{ fontFamily: "var(--font-serif)", fontWeight: 400 }}
