@@ -1,11 +1,16 @@
 export type ThemeId = "latte" | "oat" | "sage" | "cocoa" | "plum";
 export type ThemeMode = "light" | "dark";
 
+/** Per-theme default glow colors for the LCD timer, one per phase. */
+export type TimerGlow = { focus: string; shortBreak: string; longBreak: string };
+
 export type Theme = {
   id: ThemeId;
   name: string;
   mode: ThemeMode;
   swatch: string;
+  /** Default LCD-timer glow trio, tuned to read well on this theme's background. */
+  timerGlow: TimerGlow;
   css: Record<string, string>;
 };
 
@@ -36,6 +41,7 @@ export const THEMES: Theme[] = [
     name: "Latte",
     mode: "light",
     swatch: "linear-gradient(135deg, #f1ebdd, #c98a6d)",
+    timerGlow: { focus: "#d98a3f", shortBreak: "#46a86f", longBreak: "#8a5fd0" },
     css: {
       "--bg": "#e9e0d0",
       "--bg-grad-top": "#ece4d6",
@@ -62,6 +68,7 @@ export const THEMES: Theme[] = [
     name: "Oat",
     mode: "light",
     swatch: "linear-gradient(135deg, #fdfbf7, #c98a6d)",
+    timerGlow: { focus: "#cf8a4a", shortBreak: "#3fa07a", longBreak: "#7d5fc8" },
     css: {
       "--bg": "#f4efe7",
       "--bg-grad-top": "#f7f2ea",
@@ -88,6 +95,7 @@ export const THEMES: Theme[] = [
     name: "Sage",
     mode: "light",
     swatch: "linear-gradient(135deg, #eef1ea, #7f9a6e)",
+    timerGlow: { focus: "#c8803a", shortBreak: "#2f9c86", longBreak: "#8a5fd0" },
     css: {
       "--bg": "#eef1ea",
       "--bg-grad-top": "#f1f4ec",
@@ -114,6 +122,7 @@ export const THEMES: Theme[] = [
     name: "Cocoa",
     mode: "dark",
     swatch: "linear-gradient(135deg, #241f1a, #e0a17e)",
+    timerGlow: { focus: "#f0b24a", shortBreak: "#86efac", longBreak: "#b69cf6" },
     css: {
       "--bg": "#241f1a",
       "--bg-grad-top": "#2b251f",
@@ -140,6 +149,7 @@ export const THEMES: Theme[] = [
     name: "Plum",
     mode: "dark",
     swatch: "linear-gradient(135deg, #211b29, #b9a0e0)",
+    timerGlow: { focus: "#f0b24a", shortBreak: "#7fe6a6", longBreak: "#c9b0ff" },
     css: {
       "--bg": "#211b29",
       "--bg-grad-top": "#271f31",
@@ -165,6 +175,15 @@ export const THEMES: Theme[] = [
 
 export const DEFAULT_THEME: ThemeId = "latte";
 export const STORAGE_KEY = "pufferstudy.theme";
+
+/** Resolve the default timer glow for a phase against a theme (falls back to Latte). */
+export function timerGlowFor(
+  themeId: ThemeId,
+  phase: keyof TimerGlow,
+): string {
+  const theme = THEMES.find((t) => t.id === themeId) ?? THEMES[0];
+  return theme.timerGlow[phase];
+}
 
 export function isThemeId(value: unknown): value is ThemeId {
   return (

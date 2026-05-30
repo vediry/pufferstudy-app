@@ -13,8 +13,13 @@ import {
   Maximize2,
   Minimize2,
 } from "lucide-react";
+import { useDeskTheme } from "@/components/theme-provider";
+import { timerGlowFor, type ThemeId } from "@/lib/themes";
 
 const STATE_KEY = "pufferstudy.pomodoro";
+
+// Sentinel glow value meaning "follow the active theme's per-phase default".
+const AUTO = "auto";
 const SETTINGS_KEY = "pufferstudy.pomodoro-settings";
 const CUSTOM_KEY = "pufferstudy.custom-timer";
 
@@ -40,10 +45,12 @@ const DEFAULT_SETTINGS: Settings = {
   focusMinutes: 25,
   shortBreakMinutes: 5,
   longBreakMinutes: 15,
-  focusGlow: "#e8b14b", // amber — warm, attention-grabbing
-  shortBreakGlow: "#86efac", // soft green — relax, refresh
-  longBreakGlow: "#a78bfa", // violet — deep rest
-  customGlow: "#e8b14b", // amber — neutral starting point for free-form timers
+  // "auto" = follow the active theme's per-phase glow default (see lib/themes.ts).
+  // Users can still pin a fixed color per phase, which overrides Auto on every theme.
+  focusGlow: AUTO,
+  shortBreakGlow: AUTO,
+  longBreakGlow: AUTO,
+  customGlow: AUTO,
   glowIntensity: 3,
   chimeEnabled: true,
   notificationsEnabled: false,
@@ -51,11 +58,18 @@ const DEFAULT_SETTINGS: Settings = {
   customMinutes: 10,
 };
 
-function effectiveGlowColor(s: Settings, mode: Mode, phase: Phase): string {
-  if (mode === "custom") return s.customGlow;
-  if (phase === "focus") return s.focusGlow;
-  if (phase === "shortBreak") return s.shortBreakGlow;
-  return s.longBreakGlow;
+// Resolve a stored glow value: the AUTO sentinel maps to the active theme's
+// per-phase default; any other value is an explicit hex the user pinned.
+function resolveGlow(value: string, themeId: ThemeId, phase: Phase): string {
+  if (value !== AUTO) return value;
+  return timerGlowFor(themeId, phase);
+}
+
+function effectiveGlowColor(s: Settings, mode: Mode, phase: Phase, themeId: ThemeId): string {
+  if (mode === "custom") return resolveGlow(s.customGlow, themeId, "focus");
+  if (phase === "focus") return resolveGlow(s.focusGlow, themeId, "focus");
+  if (phase === "shortBreak") return resolveGlow(s.shortBreakGlow, themeId, "shortBreak");
+  return resolveGlow(s.longBreakGlow, themeId, "longBreak");
 }
 
 // Glow stops per intensity level. Numbers are blur radii in px.
@@ -190,26 +204,36 @@ function loadSettings(): Settings {
     if (!raw) return DEFAULT_SETTINGS;
     const parsed = JSON.parse(raw) as Partial<Settings> & { glowColor?: string };
 
-    // Migration: pre-per-phase saves had a single `glowColor`. If new per-phase
-    // fields aren't present, fall the new fields back to that legacy value so
-    // the visual look doesn't change on first load.
+    // Migration: pre-per-phase saves had a single `glowColor`.
     const legacyGlow =
       typeof parsed.glowColor === "string" && HEX_RE.test(parsed.glowColor)
         ? parsed.glowColor
         : null;
-    const pickGlow = (v: unknown, fallback: string): string => {
-      if (typeof v === "string" && HEX_RE.test(v)) return v;
-      return legacyGlow ?? fallback;
+    // The fixed hexes that USED to be the defaults (before per-theme Auto). A saved
+    // value equal to its old default means the user never customized that phase, so
+    // we adopt the new Auto behavior; anything else is a deliberate pin we keep.
+    const OLD_DEFAULTS: Record<"focus" | "shortBreak" | "longBreak" | "custom", string> = {
+      focus: "#e8b14b",
+      shortBreak: "#86efac",
+      longBreak: "#a78bfa",
+      custom: "#e8b14b",
+    };
+    const normalizeGlow = (v: unknown, oldDefault: string): string => {
+      const candidate =
+        v === AUTO ? AUTO : typeof v === "string" && HEX_RE.test(v) ? v : legacyGlow;
+      if (candidate == null || candidate === AUTO) return AUTO;
+      if (candidate.toLowerCase() === oldDefault.toLowerCase()) return AUTO;
+      return candidate;
     };
 
     return {
       focusMinutes: clampMinutes(parsed.focusMinutes, DEFAULT_SETTINGS.focusMinutes),
       shortBreakMinutes: clampMinutes(parsed.shortBreakMinutes, DEFAULT_SETTINGS.shortBreakMinutes),
       longBreakMinutes: clampMinutes(parsed.longBreakMinutes, DEFAULT_SETTINGS.longBreakMinutes),
-      focusGlow: pickGlow(parsed.focusGlow, DEFAULT_SETTINGS.focusGlow),
-      shortBreakGlow: pickGlow(parsed.shortBreakGlow, DEFAULT_SETTINGS.shortBreakGlow),
-      longBreakGlow: pickGlow(parsed.longBreakGlow, DEFAULT_SETTINGS.longBreakGlow),
-      customGlow: pickGlow(parsed.customGlow, DEFAULT_SETTINGS.customGlow),
+      focusGlow: normalizeGlow(parsed.focusGlow, OLD_DEFAULTS.focus),
+      shortBreakGlow: normalizeGlow(parsed.shortBreakGlow, OLD_DEFAULTS.shortBreak),
+      longBreakGlow: normalizeGlow(parsed.longBreakGlow, OLD_DEFAULTS.longBreak),
+      customGlow: normalizeGlow(parsed.customGlow, OLD_DEFAULTS.custom),
       glowIntensity: clampIntensity(parsed.glowIntensity, DEFAULT_SETTINGS.glowIntensity),
       chimeEnabled:
         typeof parsed.chimeEnabled === "boolean" ? parsed.chimeEnabled : DEFAULT_SETTINGS.chimeEnabled,
@@ -297,6 +321,7 @@ function fireNotification(msg: { title: string; body: string }) {
 }
 
 export function PomodoroTimer() {
+  const { themeId } = useDeskTheme();
   const [settings, setSettings] = React.useState<Settings>(DEFAULT_SETTINGS);
   const [state, setState] = React.useState<PomodoroState>(defaultState);
   const [customState, setCustomState] = React.useState<CustomTimerState>(defaultCustomState);
@@ -545,7 +570,9 @@ export function PomodoroTimer() {
   const seconds = currentSeconds % 60;
   const timeStr = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
   const isRunning = isCustom ? customState.running : state.running;
-  const currentGlow = effectiveGlowColor(settings, settings.mode, state.phase);
+  const currentGlow = effectiveGlowColor(settings, settings.mode, state.phase, themeId);
+  // Cycle dots always track the focus glow (status indicators, not the live phase).
+  const focusDotGlow = resolveGlow(settings.focusGlow, themeId, "focus");
   const chromeClass = minimalView
     ? "transition-opacity duration-300 opacity-0 group-hover:opacity-100 focus-within:opacity-100"
     : "";
@@ -619,11 +646,11 @@ export function PomodoroTimer() {
                 className="h-2 w-2 rounded-full"
                 style={{
                   background: filled
-                    ? settings.focusGlow
+                    ? focusDotGlow
                     : "color-mix(in srgb, var(--ink-faint) 35%, transparent)",
                   boxShadow:
                     filled && settings.glowIntensity > 0
-                      ? `0 0 4px ${settings.focusGlow}`
+                      ? `0 0 4px ${focusDotGlow}`
                       : undefined,
                 }}
               />
@@ -727,6 +754,7 @@ export function PomodoroTimer() {
           <SettingsPanel
             settings={settings}
             currentGlow={currentGlow}
+            themeId={themeId}
             onApplyDurations={applyDurations}
             onUpdateLive={updateLive}
             onCancel={() => setSettingsOpen(false)}
@@ -817,12 +845,14 @@ function CustomMinutesField({
 function SettingsPanel({
   settings,
   currentGlow,
+  themeId,
   onApplyDurations,
   onUpdateLive,
   onCancel,
 }: {
   settings: Settings;
   currentGlow: string;
+  themeId: ThemeId;
   onApplyDurations: (
     next: Pick<Settings, "focusMinutes" | "shortBreakMinutes" | "longBreakMinutes">,
   ) => void;
@@ -869,21 +899,25 @@ function SettingsPanel({
         <SwatchRow
           label="Focus"
           value={settings.focusGlow}
+          autoColor={timerGlowFor(themeId, "focus")}
           onChange={(v) => onUpdateLive({ focusGlow: v })}
         />
         <SwatchRow
           label="Short break"
           value={settings.shortBreakGlow}
+          autoColor={timerGlowFor(themeId, "shortBreak")}
           onChange={(v) => onUpdateLive({ shortBreakGlow: v })}
         />
         <SwatchRow
           label="Long break"
           value={settings.longBreakGlow}
+          autoColor={timerGlowFor(themeId, "longBreak")}
           onChange={(v) => onUpdateLive({ longBreakGlow: v })}
         />
         <SwatchRow
           label="Custom"
           value={settings.customGlow}
+          autoColor={timerGlowFor(themeId, "focus")}
           onChange={(v) => onUpdateLive({ customGlow: v })}
         />
       </div>
@@ -1002,18 +1036,45 @@ function Toggle({
 function SwatchRow({
   label,
   value,
+  autoColor,
   onChange,
 }: {
   label: string;
   value: string;
+  autoColor: string;
   onChange: (color: string) => void;
 }) {
+  const isAuto = value === AUTO;
+  // Native color inputs need a real hex; show the resolved theme color when on Auto.
+  const colorInputValue = isAuto ? autoColor : value;
   return (
     <div className="flex items-center gap-2">
       <span className="w-[84px] text-xs text-ink-muted">{label}</span>
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1">
+        {/* Auto = follow the active theme. Shows the resolved color with an "A" badge. */}
+        <button
+          type="button"
+          onClick={() => onChange(AUTO)}
+          aria-label={`${label} glow: Auto, match theme`}
+          title="Auto — match theme"
+          className="relative h-5 w-5 rounded-full border transition-shadow"
+          style={{
+            background: autoColor,
+            borderColor: isAuto
+              ? "var(--ink)"
+              : "color-mix(in srgb, var(--border) 60%, transparent)",
+            boxShadow: isAuto ? `0 0 4px ${autoColor}, 0 0 10px ${autoColor}` : undefined,
+          }}
+        >
+          <span
+            className="pointer-events-none absolute inset-0 flex items-center justify-center text-[9px] font-bold leading-none text-white"
+            style={{ textShadow: "0 0 2px rgba(0,0,0,0.55)" }}
+          >
+            A
+          </span>
+        </button>
         {GLOW_SWATCHES.map((s) => {
-          const active = value.toLowerCase() === s.value.toLowerCase();
+          const active = !isAuto && value.toLowerCase() === s.value.toLowerCase();
           return (
             <button
               key={s.value}
@@ -1046,7 +1107,7 @@ function SwatchRow({
           />
           <input
             type="color"
-            value={value}
+            value={colorInputValue}
             onChange={(e) => onChange(e.target.value)}
             className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
           />
