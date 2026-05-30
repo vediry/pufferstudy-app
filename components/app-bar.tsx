@@ -9,11 +9,8 @@ export function AppBar() {
     <header className="no-print sticky top-0 z-40 border-b border-default bg-[color:var(--surface)]">
       <div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between px-4 sm:px-8">
         <Link href="/" className="group flex items-center gap-2 text-ink no-underline">
-          <span
-            className="text-[1.4rem] leading-none"
-            style={{ fontFamily: "var(--font-serif)" }}
-          >
-            Puffer<span className="italic" style={{ color: "var(--accent-deep)" }}>Study</span>
+          <span className="text-[1.4rem] font-bold leading-none tracking-tight">
+            Puffer<span style={{ color: "var(--accent)" }}>Study</span>
           </span>
         </Link>
         <nav className="flex items-center gap-3">

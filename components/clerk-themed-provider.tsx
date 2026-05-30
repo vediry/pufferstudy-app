@@ -22,7 +22,7 @@ export function ClerkThemedProvider({ children }: { children: React.ReactNode })
       appearance={{
         baseTheme: isDark ? dark : undefined,
         variables: {
-          fontFamily: "var(--font-manrope)",
+          fontFamily: "var(--font-figtree)",
           colorPrimary: theme.css["--accent"],
         },
       }}

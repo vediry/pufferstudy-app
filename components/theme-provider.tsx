@@ -27,9 +27,13 @@ export function ThemeAntiFlashScript() {
 (function(){
   try {
     var stored = localStorage.getItem(${JSON.stringify(STORAGE_KEY)});
-    var legacy = { light: "atelier", dark: "spacegrey", forest: "atelier" };
+    // Keep in sync with migrateLegacyTheme() in lib/themes.ts
+    var legacy = {
+      light: "latte", dark: "cocoa", forest: "sage",
+      atelier: "oat", platinum: "sage", spacegrey: "cocoa", midnight: "plum"
+    };
     var id = legacy[stored] || stored;
-    var valid = ["atelier","platinum","spacegrey","midnight"];
+    var valid = ["latte","oat","sage","cocoa","plum"];
     if (valid.indexOf(id) === -1) id = ${JSON.stringify(DEFAULT_THEME)};
     document.documentElement.setAttribute("data-theme", id);
     if (id !== stored) localStorage.setItem(${JSON.stringify(STORAGE_KEY)}, id);

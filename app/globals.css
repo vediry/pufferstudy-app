@@ -11,152 +11,180 @@
 }
 
 @theme {
-  /* Square mode: all radius tokens zeroed. Revert by restoring 6/12/16/24. */
-  --radius-sm: 0;
-  --radius: 0;
-  --radius-lg: 0;
-  --radius-xl: 0;
+  /* Cozy redesign: soft rounded corners throughout. */
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
 
-  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
+  /* Cozy redesign: single warm humanist sans (Figtree) for everything,
+     including the wordmark (--font-serif repointed to Figtree on purpose). */
+  --font-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 }
 
-/* Square mode: override hardcoded rounded-[Xpx] utilities. Circular elements
-   (rounded-full avatars, badges, theme swatches) intentionally excluded. */
-[class*="rounded-["] {
-  border-radius: 0 !important;
-}
-
 @layer base {
-  /* Default theme = Gold Atelier (matches lib/themes.ts) */
+  /* Default theme = Latte (matches lib/themes.ts) */
   :root,
-  [data-theme="atelier"] {
-    --aurora-opacity: 0.4;
-    --aurora-color-a: #e8dcc0;
-    --aurora-color-b: #d4c8a8;
-    --bg: #faf6ec;
-    --bg-grad-top: #faf6ec;
-    --bg-grad-bottom: #f3ecd9;
-    --surface: #fffaef;
-    --surface-2: #f5edd6;
-    --surface-3: #ece1c0;
-    --border: #d8c89c;
-    --border-strong: #c9a96e;
-    --ink: #2c241a;
-    --ink-muted: #6b5d44;
-    --ink-faint: #9c8d70;
-    --accent: #b08842;
-    --accent-light: #d4b06e;
-    --accent-deep: #8c6a30;
-    --primary: #b08842;
-    --primary-hover: #d4b06e;
-    --primary-active: #8c6a30;
-    --primary-foreground: #fffaef;
-    --ring: rgba(176, 136, 66, 0.4);
-    --success: #3B8C4F;
-    --warning: #a8531e;
-    --danger: #8c2a1f;
-    --info: #3578C9;
-    --shadow-sm: 0 1px 2px rgba(140, 106, 48, 0.08);
-    --shadow: 0 4px 12px rgba(140, 106, 48, 0.10), 0 1px 3px rgba(140, 106, 48, 0.06);
-    --shadow-lg: 0 12px 32px rgba(140, 106, 48, 0.14), 0 4px 8px rgba(140, 106, 48, 0.08);
-  }
-
-  [data-theme="platinum"] {
+  [data-theme="latte"] {
     --aurora-opacity: 0.35;
-    --aurora-color-a: #dde0e6;
-    --aurora-color-b: #c8ccd4;
-    --bg: #fafbfc;
-    --bg-grad-top: #fafbfc;
-    --bg-grad-bottom: #eceff3;
-    --surface: #ffffff;
-    --surface-2: #f1f3f5;
-    --surface-3: #e0e4e9;
-    --border: #d1d5db;
-    --border-strong: #9ca3af;
-    --ink: #1d242c;
-    --ink-muted: #4b5563;
-    --ink-faint: #6b7480;
-    --accent: #4a5159;
-    --accent-light: #9ca3af;
-    --accent-deep: #2a2f37;
-    --primary: #2a2f37;
-    --primary-hover: #4a5159;
-    --primary-active: #1d242c;
-    --primary-foreground: #fafbfc;
-    --ring: rgba(74, 81, 89, 0.4);
-    --success: #047857;
-    --warning: #b45309;
-    --danger: #991b1b;
-    --info: #1e40af;
-    --shadow-sm: 0 1px 2px rgba(29, 36, 44, 0.05);
-    --shadow: 0 4px 12px rgba(29, 36, 44, 0.08), 0 1px 3px rgba(29, 36, 44, 0.04);
-    --shadow-lg: 0 12px 32px rgba(29, 36, 44, 0.12), 0 4px 8px rgba(29, 36, 44, 0.06);
+    --aurora-color-a: #f0e3cb;
+    --aurora-color-b: #e2cdb0;
+    --bg: #e9e0d0;
+    --bg-grad-top: #ece4d6;
+    --bg-grad-bottom: #e2d8c4;
+    --surface: #f1ebdd;
+    --surface-2: #e4d9c4;
+    --surface-3: #d8cbb0;
+    --border: #ddd0ba;
+    --border-strong: #c9b692;
+    --ink: #3d362e;
+    --ink-muted: #7a6f5c;
+    --ink-faint: #9c8e76;
+    --accent: #c98a6d;
+    --accent-light: #dda98f;
+    --accent-deep: #a86a4f;
+    --primary: #c98a6d;
+    --primary-hover: #dda98f;
+    --primary-active: #a86a4f;
+    --primary-foreground: #fffaf4;
+    --ring: rgba(201, 138, 109, 0.4);
+    --success: #5b9e6a;
+    --warning: #b9742f;
+    --danger: #b5452f;
+    --info: #6b86b0;
+    --shadow-sm: 0 1px 2px rgba(120, 90, 60, 0.08);
+    --shadow: 0 6px 18px rgba(120, 90, 60, 0.10), 0 1px 3px rgba(120, 90, 60, 0.06);
+    --shadow-lg: 0 16px 36px rgba(120, 90, 60, 0.16), 0 4px 10px rgba(120, 90, 60, 0.08);
   }
 
-  [data-theme="spacegrey"] {
-    --aurora-opacity: 0.55;
-    --aurora-color-a: #ddd6c8;
-    --aurora-color-b: #c8bea8;
-    --bg: #1c1b18;
-    --bg-grad-top: #2a2926;
-    --bg-grad-bottom: #1c1b18;
-    --surface: #2f2d29;
-    --surface-2: #3a3833;
-    --surface-3: #4a473f;
-    --border: rgba(255, 255, 255, 0.08);
-    --border-strong: rgba(255, 255, 255, 0.18);
-    --ink: #ece6d7;
-    --ink-muted: #bab2a0;
-    --ink-faint: #8a8478;
-    --accent: #c9a96e;
-    --accent-light: #d4b78a;
-    --accent-deep: #a8884c;
-    --primary: #c9a96e;
-    --primary-hover: #d4b78a;
-    --primary-active: #a8884c;
-    --primary-foreground: #1c1b18;
-    --ring: rgba(201, 169, 110, 0.4);
-    --success: #5EBD75;
-    --warning: #e89940;
-    --danger: #ff9d8e;
-    --info: #6BA6E5;
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
+  [data-theme="oat"] {
+    --aurora-opacity: 0.32;
+    --aurora-color-a: #f3e8d4;
+    --aurora-color-b: #e7d6bd;
+    --bg: #f4efe7;
+    --bg-grad-top: #f7f2ea;
+    --bg-grad-bottom: #efe8da;
+    --surface: #fdfbf7;
+    --surface-2: #f0e8da;
+    --surface-3: #e7dcc8;
+    --border: #eadfd0;
+    --border-strong: #d6c4a4;
+    --ink: #3d362e;
+    --ink-muted: #8a8073;
+    --ink-faint: #b3a591;
+    --accent: #c98a6d;
+    --accent-light: #dda98f;
+    --accent-deep: #a86a4f;
+    --primary: #c98a6d;
+    --primary-hover: #dda98f;
+    --primary-active: #a86a4f;
+    --primary-foreground: #fffaf4;
+    --ring: rgba(201, 138, 109, 0.4);
+    --success: #5b9e6a;
+    --warning: #b9742f;
+    --danger: #b5452f;
+    --info: #6b86b0;
+    --shadow-sm: 0 1px 2px rgba(140, 106, 48, 0.07);
+    --shadow: 0 6px 18px rgba(140, 106, 48, 0.09), 0 1px 3px rgba(140, 106, 48, 0.05);
+    --shadow-lg: 0 16px 36px rgba(140, 106, 48, 0.14), 0 4px 10px rgba(140, 106, 48, 0.07);
   }
 
-  [data-theme="midnight"] {
-    --aurora-opacity: 0.65;
-    --aurora-color-a: #d0d4dc;
-    --aurora-color-b: #b8bcc8;
-    --bg: #0e1320;
-    --bg-grad-top: #0e1320;
-    --bg-grad-bottom: #060912;
-    --surface: #161e30;
-    --surface-2: #1b2538;
-    --surface-3: #243049;
-    --border: rgba(212, 183, 138, 0.12);
-    --border-strong: rgba(212, 183, 138, 0.3);
-    --ink: #ece1c8;
-    --ink-muted: #bdb39a;
-    --ink-faint: #8a8a82;
-    --accent: #d4b78a;
-    --accent-light: #e6cba0;
-    --accent-deep: #a89060;
-    --primary: #d4b78a;
-    --primary-hover: #e6cba0;
-    --primary-active: #a89060;
-    --primary-foreground: #0e1320;
-    --ring: rgba(212, 183, 138, 0.4);
-    --success: #7FD49A;
-    --warning: #e89940;
-    --danger: #ff9d8e;
-    --info: #8FB39B;
+  [data-theme="sage"] {
+    --aurora-opacity: 0.32;
+    --aurora-color-a: #e4ecd8;
+    --aurora-color-b: #d6e0c8;
+    --bg: #eef1ea;
+    --bg-grad-top: #f1f4ec;
+    --bg-grad-bottom: #e8ece2;
+    --surface: #fafbf7;
+    --surface-2: #e6ebe0;
+    --surface-3: #d9e0d0;
+    --border: #dde3d6;
+    --border-strong: #b9c4ad;
+    --ink: #33392f;
+    --ink-muted: #6e7567;
+    --ink-faint: #97a08c;
+    --accent: #7f9a6e;
+    --accent-light: #9bb38a;
+    --accent-deep: #5f7a50;
+    --primary: #7f9a6e;
+    --primary-hover: #9bb38a;
+    --primary-active: #5f7a50;
+    --primary-foreground: #fafbf7;
+    --ring: rgba(127, 154, 110, 0.4);
+    --success: #5b9e6a;
+    --warning: #b9742f;
+    --danger: #b5452f;
+    --info: #6b86b0;
+    --shadow-sm: 0 1px 2px rgba(70, 90, 60, 0.07);
+    --shadow: 0 6px 18px rgba(70, 90, 60, 0.10), 0 1px 3px rgba(70, 90, 60, 0.05);
+    --shadow-lg: 0 16px 36px rgba(70, 90, 60, 0.15), 0 4px 10px rgba(70, 90, 60, 0.08);
+  }
+
+  [data-theme="cocoa"] {
+    --aurora-opacity: 0.5;
+    --aurora-color-a: #4a3f30;
+    --aurora-color-b: #5a4636;
+    --bg: #241f1a;
+    --bg-grad-top: #2b251f;
+    --bg-grad-bottom: #1e1915;
+    --surface: #322b23;
+    --surface-2: #3b332a;
+    --surface-3: #463c30;
+    --border: rgba(243, 235, 221, 0.10);
+    --border-strong: rgba(243, 235, 221, 0.22);
+    --ink: #f3ebdd;
+    --ink-muted: #c2b39e;
+    --ink-faint: #8a7d6c;
+    --accent: #e0a17e;
+    --accent-light: #ecb79b;
+    --accent-deep: #c07e5a;
+    --primary: #e0a17e;
+    --primary-hover: #ecb79b;
+    --primary-active: #c07e5a;
+    --primary-foreground: #241f1a;
+    --ring: rgba(224, 161, 126, 0.4);
+    --success: #7cc88c;
+    --warning: #e89f5a;
+    --danger: #f0998a;
+    --info: #9bb0d0;
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
+    --shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 16px 36px rgba(0, 0, 0, 0.6);
+  }
+
+  [data-theme="plum"] {
+    --aurora-opacity: 0.5;
+    --aurora-color-a: #3a2f49;
+    --aurora-color-b: #4a3a5e;
+    --bg: #211b29;
+    --bg-grad-top: #271f31;
+    --bg-grad-bottom: #1b1622;
+    --surface: #2e2638;
+    --surface-2: #372e44;
+    --surface-3: #443a52;
+    --border: rgba(239, 231, 243, 0.10);
+    --border-strong: rgba(239, 231, 243, 0.22);
+    --ink: #efe7f3;
+    --ink-muted: #c0b3cc;
+    --ink-faint: #8c7e98;
+    --accent: #b9a0e0;
+    --accent-light: #cdb8ec;
+    --accent-deep: #9b80c8;
+    --primary: #b9a0e0;
+    --primary-hover: #cdb8ec;
+    --primary-active: #9b80c8;
+    --primary-foreground: #211b29;
+    --ring: rgba(185, 160, 224, 0.4);
+    --success: #7cc88c;
+    --warning: #e89f5a;
+    --danger: #f0998a;
+    --info: #a0a8d8;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 16px 36px rgba(0, 0, 0, 0.6);
   }
 
   * {
@@ -259,32 +287,25 @@
   .shadow-card    { box-shadow: var(--shadow); }
   .shadow-lifted  { box-shadow: var(--shadow-lg); }
 
-  /* Hover-driven glow ring. Default is nearly flat; hovering lights up a
-     warm accent-colored outline + diffuse halo around the box. Pairs with
-     existing `border border-default`. */
+  /* Cozy card: soft rounded corners + a gentle always-on warm shadow that
+     lifts a touch on hover. Replaces the old accent glow-ring. */
   .glow-card {
-    border-radius: 0;
-    box-shadow: 0 1px 2px color-mix(in srgb, var(--ink) 4%, transparent);
-    transition: box-shadow 260ms ease, border-color 260ms ease, transform 260ms ease;
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+    transition: box-shadow 240ms ease, border-color 240ms ease, transform 220ms ease;
   }
   .glow-card:hover {
-    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
-    box-shadow:
-      /* Hard 1px ring at full accent */
-      0 0 0 1px color-mix(in srgb, var(--accent) 75%, transparent),
-      /* Tight inner glow */
-      0 0 18px -2px color-mix(in srgb, var(--accent) 50%, transparent),
-      /* Wide diffuse halo */
-      0 0 60px -8px color-mix(in srgb, var(--accent) 35%, transparent);
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
   }
-  /* Same hover treatment for buttons/badges that opt in. */
+  /* Gentle hover lift for buttons/badges that opt in. */
   .glow-on-hover {
-    transition: box-shadow 220ms ease, border-color 220ms ease;
+    transition: box-shadow 200ms ease, border-color 200ms ease;
   }
   .glow-on-hover:hover {
-    box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--accent) 65%, transparent),
-      0 0 14px -2px color-mix(in srgb, var(--accent) 45%, transparent);
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-sm);
   }
 
   /* Pill-shaped badge variant — used for theme/version chips with subtle outline */
