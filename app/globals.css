@@ -288,24 +288,34 @@
   .shadow-lifted  { box-shadow: var(--shadow-lg); }
 
   /* Cozy card: soft rounded corners + a gentle always-on warm shadow that
-     lifts a touch on hover. Replaces the old accent glow-ring. */
+     lifts on hover, with the accent glow outline + halo layered on top. */
   .glow-card {
     border-radius: 18px;
     box-shadow: var(--shadow);
     transition: box-shadow 240ms ease, border-color 240ms ease, transform 220ms ease;
   }
   .glow-card:hover {
-    border-color: var(--border-strong);
-    box-shadow: var(--shadow-lg);
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
     transform: translateY(-2px);
+    box-shadow:
+      /* cozy lifted shadow */
+      var(--shadow-lg),
+      /* crisp accent outline */
+      0 0 0 1px color-mix(in srgb, var(--accent) 70%, transparent),
+      /* tight inner glow */
+      0 0 18px -3px color-mix(in srgb, var(--accent) 45%, transparent),
+      /* wide diffuse halo */
+      0 0 56px -10px color-mix(in srgb, var(--accent) 30%, transparent);
   }
-  /* Gentle hover lift for buttons/badges that opt in. */
+  /* Same glow outline for buttons/badges that opt in. */
   .glow-on-hover {
     transition: box-shadow 200ms ease, border-color 200ms ease;
   }
   .glow-on-hover:hover {
-    border-color: var(--border-strong);
-    box-shadow: var(--shadow-sm);
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--accent) 60%, transparent),
+      0 0 14px -3px color-mix(in srgb, var(--accent) 40%, transparent);
   }
 
   /* Pill-shaped badge variant — used for theme/version chips with subtle outline */
