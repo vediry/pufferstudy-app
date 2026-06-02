@@ -149,7 +149,7 @@ export function MobileNav() {
             className="fixed inset-0 -z-10 cursor-default bg-transparent"
             onClick={() => setMoreOpen(false)}
           />
-          <div className="absolute bottom-full inset-x-0 border-t border-default bg-[color:var(--surface)] p-2">
+          <div id="mobile-more-panel" className="absolute bottom-full inset-x-0 border-t border-default bg-[color:var(--surface)] p-2">
             <div className="mx-auto grid max-w-[420px] grid-cols-4 gap-1">
               {overflow.map((item) => {
                 const Icon = item.icon;
@@ -192,6 +192,7 @@ export function MobileNav() {
         <button
           type="button"
           aria-expanded={moreOpen}
+          aria-controls="mobile-more-panel"
           aria-label="More"
           onClick={() => setMoreOpen((o) => !o)}
           className={linkClass(overflowActive || moreOpen)}

@@ -107,6 +107,7 @@ export async function POST(req: Request) {
 
   const outcome = parseDiagramResponse(text ?? "");
   if (!outcome.ok) {
+    console.error("[/api/diagram] parse failed:", outcome.error);
     return NextResponse.json(
       { error: "Couldn't build that diagram. Try rephrasing or regenerate." },
       { status: 502 },

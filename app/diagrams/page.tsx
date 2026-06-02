@@ -125,10 +125,11 @@ export default function DiagramsPage() {
       {/* Controls */}
       <div className="glow-card flex flex-col gap-3 border border-default bg-surface p-4">
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-semibold uppercase tracking-wider text-ink-faint">
+          <label htmlFor="diagram-subject" className="text-xs font-semibold uppercase tracking-wider text-ink-faint">
             Subject
           </label>
           <select
+            id="diagram-subject"
             value={subjectId}
             onChange={(e) => setSubjectId(e.target.value)}
             className="rounded-[10px] border border-default bg-surface px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30"
@@ -143,14 +144,15 @@ export default function DiagramsPage() {
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-semibold uppercase tracking-wider text-ink-faint">
+          <label htmlFor="diagram-topic" className="text-xs font-semibold uppercase tracking-wider text-ink-faint">
             Topic {selected && materials ? "(optional — blank = overview)" : ""}
           </label>
           <input
+            id="diagram-topic"
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && canGenerate) void generate();
+              if (e.key === "Enter" && canGenerate && !loading) void generate();
             }}
             placeholder='e.g. "the causes of World War 1"'
             className="rounded-[10px] border border-default bg-surface px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30"
@@ -203,7 +205,7 @@ export default function DiagramsPage() {
                 <button
                   key={t}
                   type="button"
-                  disabled={loading}
+                  disabled={loading || !canGenerate}
                   onClick={() => void generate(t)}
                   className={`rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors disabled:opacity-50 ${
                     result.type === t
