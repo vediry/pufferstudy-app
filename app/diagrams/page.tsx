@@ -53,7 +53,9 @@ export default function DiagramsPage() {
   const canGenerate = hasKey && (!!topic.trim() || (!!selected && !!materials));
 
   const generate = React.useCallback(
-    async (forceType?: DiagramType) => {
+    // keepKey: a type-switch only re-draws the illustration — preserve the
+    // existing Key so it doesn't get reworded. Fresh Generate/Regenerate refresh it.
+    async (forceType?: DiagramType, keepKey = false) => {
       if (!apiKey || loading) return;
       const body = {
         apiKey,
@@ -82,7 +84,7 @@ export default function DiagramsPage() {
           });
           return;
         }
-        setResult(data);
+        setResult((prev) => (keepKey && prev ? { ...data, key: prev.key } : data));
         setStatus({ kind: "idle" });
       } catch {
         setStatus({ kind: "error", message: "Couldn't reach the server." });
@@ -206,7 +208,7 @@ export default function DiagramsPage() {
                   key={t}
                   type="button"
                   disabled={loading || !canGenerate}
-                  onClick={() => void generate(t)}
+                  onClick={() => void generate(t, true)}
                   className={`rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors disabled:opacity-50 ${
                     result.type === t
                       ? "border-[color:var(--accent)] text-[color:var(--accent-deep)]"
