@@ -11,6 +11,8 @@ import {
   HelpCircle,
   BookText,
   GraduationCap,
+  Network,
+  MoreHorizontal,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -29,6 +31,7 @@ const NAV: NavItem[] = [
   { label: "Flashcards", href: "/flashcards", icon: Layers, matchPrefix: "/flashcards" },
   { label: "Practice", href: "/practice", icon: HelpCircle, matchPrefix: "/practice" },
   { label: "Tutor", href: "/tutor", icon: GraduationCap, matchPrefix: "/tutor" },
+  { label: "Diagrams", href: "/diagrams", icon: Network, matchPrefix: "/diagrams" },
 ];
 
 // Desktop sidebar groups the destinations into labelled sections.
@@ -37,6 +40,9 @@ const NAV_GROUPS: { heading: string; items: NavItem[] }[] = [
   { heading: "Workspace", items: NAV.slice(0, 3) },
   { heading: "Study tools", items: NAV.slice(3) },
 ];
+
+// Mobile bottom bar shows these four; everything else folds into "More".
+const MOBILE_PRIMARY_HREFS = ["/", "/notepad", "/flashcards", "/practice"];
 
 function useIsActive() {
   const pathname = usePathname();
@@ -108,6 +114,26 @@ export function Sidebar() {
  */
 export function MobileNav() {
   const isActive = useIsActive();
+  const pathname = usePathname();
+  const [moreOpen, setMoreOpen] = React.useState(false);
+
+  // Close the overflow sheet whenever the route changes.
+  React.useEffect(() => {
+    setMoreOpen(false);
+  }, [pathname]);
+
+  const primary = MOBILE_PRIMARY_HREFS.map((href) =>
+    NAV.find((n) => n.href === href),
+  ).filter((n): n is NavItem => !!n);
+  const overflow = NAV.filter((n) => !MOBILE_PRIMARY_HREFS.includes(n.href));
+  const overflowActive = overflow.some((item) => isActive(item));
+
+  const linkClass = (activeItem: boolean) =>
+    `flex flex-1 flex-col items-center gap-0.5 rounded-[10px] px-3 py-2 text-[11px] font-semibold transition-colors ${
+      activeItem
+        ? "bg-surface-2 text-[color:var(--accent-deep)]"
+        : "text-ink-muted active:text-ink"
+    }`;
 
   return (
     <nav
@@ -115,27 +141,64 @@ export function MobileNav() {
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       aria-label="Primary navigation"
     >
+      {moreOpen ? (
+        <>
+          <button
+            type="button"
+            aria-label="Close menu"
+            className="fixed inset-0 -z-10 cursor-default bg-transparent"
+            onClick={() => setMoreOpen(false)}
+          />
+          <div className="absolute bottom-full inset-x-0 border-t border-default bg-[color:var(--surface)] p-2">
+            <div className="mx-auto grid max-w-[420px] grid-cols-4 gap-1">
+              {overflow.map((item) => {
+                const Icon = item.icon;
+                const activeItem = isActive(item);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    aria-current={activeItem ? "page" : undefined}
+                    className={linkClass(activeItem)}
+                    style={activeItem ? activeGlow() : undefined}
+                  >
+                    <Icon className="h-5 w-5" strokeWidth={1.75} />
+                    <span className="leading-tight">{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      ) : null}
+
       <div className="mx-auto flex max-w-[420px] items-stretch justify-around px-2 py-1.5">
-        {NAV.map((item) => {
+        {primary.map((item) => {
           const Icon = item.icon;
-          const active = isActive(item);
+          const activeItem = isActive(item);
           return (
             <Link
               key={item.href}
               href={item.href}
-              aria-current={active ? "page" : undefined}
-              className={`flex flex-1 flex-col items-center gap-0.5 rounded-[10px] px-3 py-2 text-[11px] font-semibold transition-colors ${
-                active
-                  ? "bg-surface-2 text-[color:var(--accent-deep)]"
-                  : "text-ink-muted active:text-ink"
-              }`}
-              style={active ? activeGlow() : undefined}
+              aria-current={activeItem ? "page" : undefined}
+              className={linkClass(activeItem)}
+              style={activeItem ? activeGlow() : undefined}
             >
               <Icon className="h-5 w-5" strokeWidth={1.75} />
               <span className="leading-tight">{item.label}</span>
             </Link>
           );
         })}
+        <button
+          type="button"
+          aria-expanded={moreOpen}
+          aria-label="More"
+          onClick={() => setMoreOpen((o) => !o)}
+          className={linkClass(overflowActive || moreOpen)}
+        >
+          <MoreHorizontal className="h-5 w-5" strokeWidth={1.75} />
+          <span className="leading-tight">More</span>
+        </button>
       </div>
     </nav>
   );
