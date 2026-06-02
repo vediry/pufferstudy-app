@@ -35,7 +35,7 @@ const NAV: NavItem[] = [
 ];
 
 // Desktop sidebar groups the destinations into labelled sections.
-// (MobileNav keeps the flat NAV so the bottom bar stays a single row.)
+// (MobileNav shows a few primary tabs + a "More" overflow — see below.)
 const NAV_GROUPS: { heading: string; items: NavItem[] }[] = [
   { heading: "Workspace", items: NAV.slice(0, 3) },
   { heading: "Study tools", items: NAV.slice(3) },
