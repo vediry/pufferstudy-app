@@ -10,6 +10,7 @@ import {
   Layers,
   HelpCircle,
   BookText,
+  GraduationCap,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -27,6 +28,7 @@ const NAV: NavItem[] = [
   { label: "Guides", href: "/study-guides", icon: BookText, matchPrefix: "/study-guides" },
   { label: "Flashcards", href: "/flashcards", icon: Layers, matchPrefix: "/flashcards" },
   { label: "Practice", href: "/practice", icon: HelpCircle, matchPrefix: "/practice" },
+  { label: "Tutor", href: "/tutor", icon: GraduationCap, matchPrefix: "/tutor" },
 ];
 
 // Desktop sidebar groups the destinations into labelled sections.
