@@ -22,6 +22,18 @@
   --font-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Motion & feel pass: shared easing + duration tokens. */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
+  /* linear() approximation of a lightly-damped spring (single small overshoot). */
+  --ease-spring: linear(
+    0, 0.006, 0.025, 0.101, 0.539, 0.721, 0.849, 0.937, 0.991, 1.013,
+    1.019, 1.016, 1.009, 1.003, 1
+  );
+  --dur-fast: 150ms;
+  --dur-base: 280ms;
+  --dur-slow: 460ms;
 }
 
 @layer base {
@@ -461,4 +473,89 @@
 
 @media (prefers-reduced-motion: reduce) {
   .puffer-happy { animation: none; }
+}
+
+/* ---- Motion & feel pass: reusable primitives ---- */
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-up {
+  animation: fade-up var(--dur-base) var(--ease-out-soft) both;
+  animation-delay: calc(var(--stagger-index, 0) * 60ms);
+}
+.animate-scale-in {
+  animation: scale-in var(--dur-base) var(--ease-out-soft) both;
+}
+/* Page-transition entrance (slower than a normal fade-up). */
+.animate-page-in {
+  animation: fade-up var(--dur-slow) var(--ease-out-soft) both;
+}
+
+/* Scroll-into-view reveal: starts hidden, transitions in when JS adds --in. */
+.reveal {
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity var(--dur-base) var(--ease-out-soft),
+    transform var(--dur-base) var(--ease-out-soft);
+  transition-delay: calc(var(--stagger-index, 0) * 60ms);
+}
+.reveal.reveal--in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Calm shimmer skeleton — replaces Tailwind animate-pulse blocks.
+   NOTE: gradient uses rgba literals, never color-mix() (minifier strips it). */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.10),
+    transparent
+  );
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+@keyframes skeleton-shimmer {
+  100% { transform: translateX(100%); }
+}
+
+/* 3D flashcard flip. */
+.flip-scene { perspective: 1200px; }
+.flip-card {
+  position: relative;
+  width: 100%;
+  transform-style: preserve-3d;
+  transition: transform var(--dur-base) var(--ease-spring);
+}
+.flip-card--flipped { transform: rotateY(180deg); }
+.flip-face {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.flip-face--back {
+  position: absolute;
+  inset: 0;
+  transform: rotateY(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { transition: none; }
+  .flip-card { transition: none; }
 }
