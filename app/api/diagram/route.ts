@@ -33,7 +33,7 @@ Make it readable on its own:
 Mermaid rules (follow exactly so it renders):
 - Keep it focused: roughly 6 to 12 nodes.
 - Give every node a single leading emoji that fits the subject (history 🏛️ 📜 ⚔️, biology 🧬 🔬 🌿, chemistry ⚗️ 🧪, geography 🗺️ 🌋, economics 💰 📈, etc.) then the label.
-- Apart from that leading emoji, inside UNQUOTED labels use only letters, numbers and spaces — no parentheses, quotes, colons, or slashes. (Quoted flowchart/graph labels may contain richer text.)
+- ALWAYS use quoted labels for flowchart and graph nodes — e.g. A["..."] — never leave a flowchart/graph label unquoted. Inside any UNQUOTED label (mindmap and timeline only) use ONLY a leading emoji plus letters, numbers and spaces — no parentheses, quotes, colons, semicolons, slashes, or other punctuation.
 - mindmap: first line is mindmap, then a root like root((🌱 Topic)), then indented child nodes.
 - timeline: first line is timeline, then optional title line, then "period : 🔖 event" rows.
 
