@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import { createPortal } from "react-dom";
-import { Maximize2, ZoomIn, ZoomOut, RotateCcw, X } from "lucide-react";
+import { Maximize2, ZoomIn, ZoomOut, RotateCcw, X, ImageOff } from "lucide-react";
+import { sanitizeMermaid } from "@/lib/diagram";
 import { useDeskTheme, THEMES } from "@/components/theme-provider";
 
 // Module-level counter so every render() call gets a unique id (mermaid throws
@@ -31,13 +32,40 @@ export function MermaidDiagram({ code }: { code: string }) {
     (async () => {
       try {
         const mermaid = (await import("mermaid")).default;
+        const root = getComputedStyle(document.documentElement);
+        const v = (name: string, fallback: string) =>
+          root.getPropertyValue(name).trim() || fallback;
+        const sans = v("--font-sans", "Figtree, ui-sans-serif, system-ui, sans-serif");
         mermaid.initialize({
           startOnLoad: false,
           securityLevel: "strict",
-          theme: mode === "dark" ? "dark" : "neutral",
-          fontFamily: "var(--font-sans, inherit)",
+          theme: "base",
+          fontFamily: sans,
+          themeVariables: {
+            fontFamily: sans,
+            fontSize: "15px",
+            background: v("--surface", "#f1ebdd"),
+            primaryColor: v("--surface-2", "#e4d9c4"),
+            primaryBorderColor: v("--accent", "#c98a6d"),
+            primaryTextColor: v("--ink", "#3d362e"),
+            secondaryColor: v("--surface-3", "#d8cbb0"),
+            tertiaryColor: v("--surface", "#f1ebdd"),
+            mainBkg: v("--surface-2", "#e4d9c4"),
+            nodeBorder: v("--accent", "#c98a6d"),
+            nodeTextColor: v("--ink", "#3d362e"),
+            textColor: v("--ink", "#3d362e"),
+            lineColor: v("--accent-deep", "#a86a4f"),
+            edgeLabelBackground: v("--surface", "#f1ebdd"),
+            clusterBkg: v("--surface", "#f1ebdd"),
+            clusterBorder: v("--border-strong", "#c9b692"),
+            titleColor: v("--ink", "#3d362e"),
+          },
+          flowchart: { nodeSpacing: 50, rankSpacing: 55, curve: "basis", padding: 12 },
         });
-        const { svg } = await mermaid.render(`mmd-${diagramCounter++}`, code.trim());
+        const { svg } = await mermaid.render(
+          `mmd-${themeId}-${diagramCounter++}`,
+          sanitizeMermaid(code),
+        );
         if (!cancelled) setSvg(svg);
       } catch {
         if (!cancelled) setFailed(true);
@@ -46,13 +74,22 @@ export function MermaidDiagram({ code }: { code: string }) {
     return () => {
       cancelled = true;
     };
-  }, [code, mode]);
+  }, [code, themeId]);
 
   if (failed) {
     return (
-      <pre className="my-2 overflow-x-auto rounded-[10px] border border-default bg-surface-2/60 p-3 text-xs text-ink-muted">
-        {code.trim()}
-      </pre>
+      <div className="my-2 rounded-[12px] border border-default bg-surface-2/40 p-4 text-sm">
+        <p className="flex items-center gap-2 text-ink-muted">
+          <ImageOff className="h-4 w-4" strokeWidth={1.75} />
+          Couldn&apos;t draw this one. Try Regenerate, or switch the diagram type.
+        </p>
+        <details className="mt-2">
+          <summary className="cursor-pointer text-xs text-ink-faint">Show code</summary>
+          <pre className="mt-2 overflow-x-auto rounded-[8px] border border-default bg-surface p-2 text-xs text-ink-muted">
+            {code.trim()}
+          </pre>
+        </details>
+      </div>
     );
   }
 
