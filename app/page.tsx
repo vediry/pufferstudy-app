@@ -9,6 +9,7 @@ import { TodayPanel } from "@/components/today-panel";
 import { ActivityFeed } from "@/components/activity-feed";
 import { UpcomingTimeline } from "@/components/upcoming-timeline";
 import { SubjectsGrid } from "@/components/subjects-grid";
+import { Reveal } from "@/components/motion/reveal";
 import { useSubjects } from "@/lib/cloud-subjects";
 import { useAssignments } from "@/lib/cloud-assignments";
 
@@ -68,23 +69,31 @@ export default function DeskPage() {
 
       {!ready ? (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start">
-          <div className="h-[400px] animate-pulse bg-surface-2/60 lg:col-span-1" />
-          <div className="h-[400px] animate-pulse bg-surface-2/60 lg:col-span-2" />
+          <div className="skeleton h-[400px] rounded-[18px] lg:col-span-1" />
+          <div className="skeleton h-[400px] rounded-[18px] lg:col-span-2" />
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start">
           <aside className="flex flex-col gap-4 lg:sticky lg:top-24 lg:col-span-1 lg:self-start lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
-            <TodayPanel subjects={items} assignments={assignments ?? []} />
-            <ActivityFeed />
+            <Reveal index={0}>
+              <TodayPanel subjects={items} assignments={assignments ?? []} />
+            </Reveal>
+            <Reveal index={1}>
+              <ActivityFeed />
+            </Reveal>
           </aside>
           <section className="flex flex-col gap-4 lg:col-span-2">
-            <UpcomingTimeline subjects={items} assignments={assignments ?? []} />
-            <SubjectsGrid
-              subjects={items}
-              onSubjectsChange={(updater) =>
-                setSubjects((prev) => (prev ? updater(prev) : prev))
-              }
-            />
+            <Reveal index={1}>
+              <UpcomingTimeline subjects={items} assignments={assignments ?? []} />
+            </Reveal>
+            <Reveal index={2}>
+              <SubjectsGrid
+                subjects={items}
+                onSubjectsChange={(updater) =>
+                  setSubjects((prev) => (prev ? updater(prev) : prev))
+                }
+              />
+            </Reveal>
           </section>
         </div>
       )}
