@@ -221,7 +221,7 @@ export default function SubjectPage() {
   if (subject === undefined) {
     return (
       <div className="mx-auto w-full max-w-[1280px] px-4 py-10 sm:px-8 sm:py-12">
-        <div className="h-32 animate-pulse rounded-[14px] bg-surface-2/60" />
+        <div className="skeleton h-32 rounded-[18px]" />
       </div>
     );
   }
@@ -251,7 +251,7 @@ export default function SubjectPage() {
         : subject?.cheatsheetMarkdown ?? "";
 
   return (
-    <div className="mx-auto w-full max-w-[1280px] px-4 py-10 sm:px-8 sm:py-12">
+    <div className="animate-fade-up mx-auto w-full max-w-[1280px] px-4 py-10 sm:px-8 sm:py-12">
       <div className="no-print">
         <Link
           href="/"

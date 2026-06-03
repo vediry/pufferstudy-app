@@ -14,6 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Puffer } from "@/components/puffer";
+import { Reveal } from "@/components/motion/reveal";
 import { useSubjects, type Subject } from "@/lib/cloud-subjects";
 import { formatRelativeTime } from "@/lib/desk";
 
@@ -54,7 +55,7 @@ export default function StudyGuidesPage() {
       {subjects === null ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {[0, 1].map((i) => (
-            <div key={i} className="h-32 animate-pulse rounded-[14px] bg-surface-2/60" />
+            <div key={i} className="skeleton h-32 rounded-[18px]" />
           ))}
         </div>
       ) : subjects.length === 0 ? (
@@ -67,8 +68,10 @@ export default function StudyGuidesPage() {
                 Your guides ({withGuide.length})
               </h2>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {withGuide.map((s) => (
-                  <GuideCard key={s.id} subject={s} />
+                {withGuide.map((s, i) => (
+                  <Reveal key={s.id} index={i}>
+                    <GuideCard subject={s} />
+                  </Reveal>
                 ))}
               </div>
             </section>

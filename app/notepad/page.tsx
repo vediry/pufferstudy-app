@@ -149,7 +149,7 @@ export default function NotepadPage() {
           {notes === null ? (
             <div className="space-y-2">
               {[0, 1, 2].map((i) => (
-                <div key={i} className="h-12 animate-pulse rounded-[10px] bg-surface-2/60" />
+                <div key={i} className="skeleton h-12 rounded-[18px]" />
               ))}
             </div>
           ) : notes.length === 0 ? (

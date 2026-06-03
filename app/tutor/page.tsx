@@ -130,7 +130,7 @@ export default function TutorPage() {
         style={{ maxHeight: "60vh" }}
       >
         {messages.length === 0 && status.kind !== "sending" ? (
-          <div className="m-auto flex max-w-sm flex-col items-center gap-4 py-8 text-center">
+          <div className="animate-fade-up m-auto flex max-w-sm flex-col items-center gap-4 py-8 text-center">
             <Puffer size={96} />
             <p className="text-sm text-ink-muted">
               Hi! I&apos;m your study buddy. Tell me what you&apos;re working on — I can explain it,
@@ -154,13 +154,13 @@ export default function TutorPage() {
 
         {messages.map((m, i) =>
           m.role === "user" ? (
-            <div key={i} className="flex justify-end">
+            <div key={i} className="animate-fade-up flex justify-end">
               <div className="max-w-[85%] rounded-[16px] rounded-br-[4px] bg-surface-2 px-3.5 py-2 text-sm text-ink">
                 {m.text}
               </div>
             </div>
           ) : (
-            <div key={i} className="flex items-start gap-2">
+            <div key={i} className="animate-fade-up flex items-start gap-2">
               <div className="mt-0.5 shrink-0">
                 <Puffer size={26} />
               </div>

@@ -199,7 +199,7 @@ export default function DiagramsPage() {
 
       {/* Result */}
       {result ? (
-        <div className="mt-6 flex flex-col gap-3">
+        <div className="animate-fade-up mt-6 flex flex-col gap-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-lg font-semibold text-ink">{result.title || "Diagram"}</h2>
             <div className="flex flex-wrap items-center gap-1.5">

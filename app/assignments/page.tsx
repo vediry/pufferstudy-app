@@ -4,6 +4,7 @@ import * as React from "react";
 import { Plus, Trash2, Circle, CircleDot, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Reveal } from "@/components/motion/reveal";
 import { daysUntil } from "@/lib/desk";
 import {
   useAssignments,
@@ -146,7 +147,7 @@ export default function AssignmentsPage() {
       {assignments === null ? (
         <div className="space-y-2">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-16 animate-pulse rounded-[12px] bg-surface-2/60" />
+            <div key={i} className="skeleton h-16 rounded-[18px]" />
           ))}
         </div>
       ) : filtered.length === 0 ? (
@@ -161,13 +162,15 @@ export default function AssignmentsPage() {
         </div>
       ) : (
         <ul className="flex flex-col gap-2">
-          {filtered.map((a) => (
+          {filtered.map((a, i) => (
             <li key={a.id}>
-              <AssignmentRow
-                assignment={a}
-                onStatus={(next) => handleStatus(a, next)}
-                onDelete={() => handleDelete(a.id)}
-              />
+              <Reveal index={i}>
+                <AssignmentRow
+                  assignment={a}
+                  onStatus={(next) => handleStatus(a, next)}
+                  onDelete={() => handleDelete(a.id)}
+                />
+              </Reveal>
             </li>
           ))}
         </ul>

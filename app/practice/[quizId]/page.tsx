@@ -67,7 +67,7 @@ export default function QuizPage() {
   if (load.kind === "loading") {
     return (
       <div className="mx-auto w-full max-w-[820px] px-4 py-10 sm:px-8 sm:py-12">
-        <div className="h-64 animate-pulse rounded-[14px] bg-surface-2/60" />
+        <div className="skeleton h-64 rounded-[18px]" />
       </div>
     );
   }
@@ -217,7 +217,7 @@ function Taking({
         <span>Topic · {q.topic}</span>
       </div>
 
-      <div className="glow-card border border-default bg-surface p-6">
+      <div key={index} className="animate-fade-up glow-card border border-default bg-surface p-6">
         <p
           className="mb-5 text-[1.2rem] leading-snug text-ink"
           style={{ fontFamily: "var(--font-serif)", fontWeight: 400 }}
@@ -312,7 +312,7 @@ function Results({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="glow-card flex flex-col items-center gap-3 border border-default bg-surface px-6 py-10 text-center">
+      <div className="animate-scale-in glow-card flex flex-col items-center gap-3 border border-default bg-surface px-6 py-10 text-center">
         <Puffer size={112} mood="happy" />
         <h2
           className="text-[1.6rem] leading-tight"

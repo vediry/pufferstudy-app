@@ -16,6 +16,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Puffer } from "@/components/puffer";
+import { Reveal } from "@/components/motion/reveal";
 import { useSubjects, type Subject } from "@/lib/cloud-subjects";
 import { getSettings } from "@/lib/store";
 import {
@@ -79,18 +80,23 @@ export default function PracticePage() {
         </div>
       ) : null}
 
-      <StatsRow stats={stats} />
+      <Reveal index={0}>
+        <StatsRow stats={stats} />
+      </Reveal>
 
       {stats && stats.weakest.length > 0 ? (
-        <ImprovementSection stats={stats} />
+        <Reveal index={1}>
+          <ImprovementSection stats={stats} />
+        </Reveal>
       ) : null}
 
+      <Reveal index={2}>
       <section className="mb-8 flex flex-col gap-3">
         <h2 className="text-[11px] font-bold uppercase tracking-wider text-ink-faint">
           Start a new quiz
         </h2>
         {subjects === null ? (
-          <div className="h-24 animate-pulse rounded-[14px] bg-surface-2/60" />
+          <div className="skeleton h-24 rounded-[18px]" />
         ) : eligibleSubjects.length === 0 ? (
           <NoEligibleSubjects hasAny={(subjects?.length ?? 0) > 0} />
         ) : (
@@ -107,9 +113,12 @@ export default function PracticePage() {
           </div>
         )}
       </section>
+      </Reveal>
 
       {stats && stats.recent.length > 0 ? (
-        <RecentAttempts stats={stats} refresh={refreshStats} />
+        <Reveal index={3}>
+          <RecentAttempts stats={stats} refresh={refreshStats} />
+        </Reveal>
       ) : null}
     </div>
   );
@@ -120,7 +129,7 @@ function StatsRow({ stats }: { stats: PracticeStats | null }) {
     return (
       <div className="mb-6 grid grid-cols-3 gap-3 sm:gap-4">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="h-24 animate-pulse rounded-[14px] bg-surface-2/60" />
+          <div key={i} className="skeleton h-24 rounded-[18px]" />
         ))}
       </div>
     );
