@@ -107,3 +107,15 @@ export function parseDiagramResponse(raw: string): ParseOutcome {
 
   return { ok: true, result: { type, title, mermaid, key } };
 }
+
+// Conservative pre-render cleanup for model-emitted Mermaid. Never throws;
+// returns the input unchanged when nothing matches. Kept pure for testing.
+export function sanitizeMermaid(code: string): string {
+  if (typeof code !== "string") return "";
+  let s = code.replace(/\r\n/g, "\n").trim();
+  const fenced = s.match(/^```(?:mermaid)?\s*([\s\S]*?)\s*```$/i);
+  if (fenced) s = fenced[1].trim();
+  s = s.replace(/<br\s*\/?>/gi, "<br/>");
+  s = s.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+  return s;
+}

@@ -3,6 +3,7 @@ import {
   buildDiagramPrompt,
   parseDiagramResponse,
   DIAGRAM_TYPES,
+  sanitizeMermaid,
 } from "@/lib/diagram";
 
 describe("buildDiagramPrompt", () => {
@@ -91,5 +92,38 @@ describe("parseDiagramResponse", () => {
   it("errors when there is no mermaid body", () => {
     const out = parseDiagramResponse(JSON.stringify({ type: "mindmap" }));
     expect(out.ok).toBe(false);
+  });
+});
+
+describe("sanitizeMermaid", () => {
+  it("strips a ```mermaid fence wrapper", () => {
+    expect(sanitizeMermaid("```mermaid\nflowchart TD\nA-->B\n```")).toBe(
+      "flowchart TD\nA-->B",
+    );
+  });
+
+  it("strips a plain ``` fence wrapper", () => {
+    expect(sanitizeMermaid("```\nmindmap\nroot\n```")).toBe("mindmap\nroot");
+  });
+
+  it("normalizes <br>, <BR> and <br /> to <br/>", () => {
+    expect(sanitizeMermaid('A["x<br>y<BR>z<br />w"]')).toBe('A["x<br/>y<br/>z<br/>w"]');
+  });
+
+  it("straightens smart quotes", () => {
+    expect(sanitizeMermaid("A[“hi” ‘there’]")).toBe("A[\"hi\" 'there']");
+  });
+
+  it("converts CRLF to LF", () => {
+    expect(sanitizeMermaid("flowchart TD\r\nA-->B")).toBe("flowchart TD\nA-->B");
+  });
+
+  it("passes clean code through unchanged", () => {
+    expect(sanitizeMermaid("flowchart TD\nA-->B")).toBe("flowchart TD\nA-->B");
+  });
+
+  it("returns empty string for non-string input", () => {
+    // @ts-expect-error testing runtime guard
+    expect(sanitizeMermaid(null)).toBe("");
   });
 });
