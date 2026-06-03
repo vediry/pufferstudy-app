@@ -102,7 +102,7 @@ export default function FlashcardsPage() {
       {decks === null ? (
         <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
           {[0, 1].map((i) => (
-            <div key={i} className="h-32 animate-pulse rounded-[14px] bg-surface-2/60" />
+            <div key={i} className="skeleton h-32 rounded-[18px]" />
           ))}
         </div>
       ) : decks.length > 0 ? (
@@ -130,7 +130,7 @@ export default function FlashcardsPage() {
             : "Get started"}
         </h2>
         {subjects === null ? (
-          <div className="h-24 animate-pulse rounded-[14px] bg-surface-2/60" />
+          <div className="skeleton h-24 rounded-[18px]" />
         ) : eligibleSubjects.length === 0 && (subjects?.length ?? 0) === 0 ? (
           <NoSubjectsYet />
         ) : eligibleSubjects.length === 0 ? (
