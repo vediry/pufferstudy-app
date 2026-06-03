@@ -69,7 +69,7 @@ export default function StudyPage() {
   if (state.kind === "loading") {
     return (
       <div className="mx-auto w-full max-w-[760px] px-4 py-10 sm:px-8 sm:py-12">
-        <div className="h-64 animate-pulse rounded-[14px] bg-surface-2/60" />
+        <div className="skeleton h-64 rounded-[18px]" />
       </div>
     );
   }
@@ -111,7 +111,7 @@ export default function StudyPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[760px] px-4 py-10 sm:px-8 sm:py-12">
+    <div className="animate-fade-up mx-auto w-full max-w-[760px] px-4 py-10 sm:px-8 sm:py-12">
       <Link
         href="/flashcards"
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-ink"
@@ -175,20 +175,35 @@ function StudyCard({
         type="button"
         onClick={onFlip}
         aria-label={flipped ? "Show front" : "Reveal answer"}
-        className="glow-card flex min-h-[260px] w-full flex-col items-center justify-center border border-default bg-surface p-8 text-center transition-colors hover:bg-surface-2/40"
+        className="flip-scene w-full"
       >
-        <p className="text-[10.5px] font-bold uppercase tracking-wider text-ink-faint">
-          {flipped ? "Back" : "Front"}
-        </p>
-        <p
-          className="mt-4 text-[1.4rem] leading-tight text-ink"
-          style={{ fontFamily: "var(--font-serif)", fontWeight: 400 }}
-        >
-          {flipped ? card.back : card.front}
-        </p>
-        {!flipped ? (
-          <p className="mt-6 text-[12px] text-ink-faint">Click anywhere to reveal</p>
-        ) : null}
+        <div className={`flip-card ${flipped ? "flip-card--flipped" : ""}`}>
+          {/* Front face */}
+          <div className="flip-face glow-card flex min-h-[260px] w-full flex-col items-center justify-center border border-default bg-surface p-8 text-center">
+            <p className="text-[10.5px] font-bold uppercase tracking-wider text-ink-faint">
+              Front
+            </p>
+            <p
+              className="mt-4 text-[1.4rem] leading-tight text-ink"
+              style={{ fontFamily: "var(--font-serif)", fontWeight: 400 }}
+            >
+              {card.front}
+            </p>
+            <p className="mt-6 text-[12px] text-ink-faint">Click anywhere to reveal</p>
+          </div>
+          {/* Back face */}
+          <div className="flip-face flip-face--back glow-card flex min-h-[260px] w-full flex-col items-center justify-center border border-default bg-surface p-8 text-center">
+            <p className="text-[10.5px] font-bold uppercase tracking-wider text-ink-faint">
+              Back
+            </p>
+            <p
+              className="mt-4 text-[1.4rem] leading-tight text-ink"
+              style={{ fontFamily: "var(--font-serif)", fontWeight: 400 }}
+            >
+              {card.back}
+            </p>
+          </div>
+        </div>
       </button>
 
       {flipped ? (
@@ -226,7 +241,7 @@ function SessionComplete({
   onRestart: () => void;
 }) {
   return (
-    <div className="glow-card flex flex-col items-center gap-3 border border-default bg-surface px-6 py-16 text-center">
+    <div className="animate-scale-in glow-card flex flex-col items-center gap-3 border border-default bg-surface px-6 py-16 text-center">
       <Puffer size={112} mood="happy" />
       <h2
         className="text-[1.5rem] leading-tight"
