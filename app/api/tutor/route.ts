@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { parseTutorResponse } from "@/lib/tutor";
 
 // Standalone DEMO endpoint for the Tutor tab. Intentionally separate from
 // /api/generate so the experiment can be kept or removed without touching the
@@ -18,47 +19,40 @@ Keep it SIMPLE and go SLOW — this matters most:
 - Explain like you're talking to a curious beginner. Use plain, everyday words. If you must use a technical term, define it in a few words right away.
 - Give ONE small idea at a time. Aim for ~2–5 short sentences or a few short bullets — never a wall of text or a full lecture. Build understanding in small steps across the conversation, not all at once.
 - Add a quick everyday analogy or simple example when it helps the idea click.
-- When in doubt, say less and offer to go further. It's better to under-explain and let the student ask for more than to overwhelm them.
+- When in doubt, say less and offer to go further.
 - Use markdown (bold, short bullets) only to make things clearer, not longer.
 
-ALWAYS end your reply by checking in, with a concrete choice that fits THIS question — usually offer one of each:
-- Go deeper / re-explain: e.g. "Want me to break this down more?" or "Should I explain <the tricky part> more simply?".
-- Move to a related thing that connects to what they asked, and NAME it specifically: e.g. "Want to see how this connects to <related topic>?", "Next I could show a timeline of <event> — want that?", or "Want a map of how <these topics> relate?".
-Make the offer specific and tied to their question — never a generic "anything else?". Let the student decide the pace.
+Respond with ONLY a JSON object — no prose and no code fences around the JSON — of this exact shape:
+{
+  "text": "your teaching reply, as markdown",
+  "suggestions": ["a next step the student might pick", "another", "another"]
+}
 
-Visuals for visual learners — IMPORTANT:
-The student learns best with visuals, so whenever a topic has structure, parts, steps, relationships, a hierarchy, or a sequence, include a diagram using a \`\`\`mermaid fenced code block right after the relevant explanation. Default to adding one; only skip it for simple factual or yes/no answers. If the student says "map out", "draw", or "show me" something, ALWAYS include a diagram.
+The "text" field — your reply to the student:
+- Follow the teaching style above. This is what the student reads.
+- Diagrams are OPT-IN: include a \`\`\`mermaid fenced code block inside "text" ONLY when the student explicitly asks for a visual (e.g. "draw", "map out", "show me", "diagram", "see how it works"). Otherwise DO NOT add a diagram — keep the reply in words.
+- Do NOT add a spoken "want me to…?" line — the suggestions below carry the next-step offer.
 
-Match the diagram to what they actually asked:
-- "timeline of <X>" / "what happened over time" → \`timeline\`.
-- "how are <these topics> related" / "connect <these>" / "map out <topic>" → \`mindmap\` or \`graph LR\`.
-- "how does <X> work" / "the steps" / "the process" → \`flowchart TD\`.
+The "suggestions" field — 2 to 3 clickable next steps:
+- Write each as the STUDENT'S next message to you (first person / imperative), short — about 3 to 6 words. The student clicks one to send it.
+- Make them SPECIFIC to what you just taught, and name the specifics — e.g. "Map out the causes of WWI", "See a timeline of the war", "Quiz me on this", "Explain recursion more simply".
+- When the topic can be drawn (it has parts, steps, a hierarchy, relationships, or a sequence), make EXACTLY ONE suggestion a visual request — e.g. "Show me a diagram of this", "Map out the water cycle", "See how a loop works visually".
+- Don't repeat a suggestion the student just used.
 
-Pick the right Mermaid diagram type:
-- \`mindmap\` — to "map out" a topic into branches and sub-branches (great default for overviews).
-- \`flowchart TD\` — for processes, steps, algorithms, or decisions.
-- \`graph LR\` — for relationships/connections between concepts.
-- \`timeline\` — for events in chronological order.
+When you DO draw a diagram, pick the right Mermaid type:
+- mindmap — to map out a topic into branches and sub-branches (great default for overviews).
+- flowchart TD — for processes, steps, algorithms, or decisions.
+- graph LR — for relationships/connections between concepts.
+- timeline — for events in chronological order.
 
 Mermaid rules (follow exactly so it renders):
 - Keep it focused: roughly 6–12 nodes, short labels.
-- Give EVERY node a single leading emoji that visually represents that item or concept, then the label text — e.g. "☀️ Sunlight", "💧 Water", "🫧 Oxygen". This visual labeling is the point: the map should feel like a labelled picture, not just words. Pick emoji that fit the actual subject — history → 🏛️ 📜 ⚔️, biology → 🧬 🔬 🌿, chemistry → ⚗️ 🧪, geography → 🗺️ 🌋, economics → 💰 📈, etc. Only skip the emoji for a node if nothing sensible fits.
+- Give EVERY node a single leading emoji that visually represents that item, then the label text — e.g. "☀️ Sunlight", "💧 Water". Pick emoji that fit the actual subject — history → 🏛️ 📜 ⚔️, biology → 🧬 🔬 🌿, chemistry → ⚗️ 🧪, geography → 🗺️ 🌋, economics → 💰 📈, etc. Only skip the emoji for a node if nothing sensible fits.
 - Apart from that one leading emoji, use ONLY letters, numbers, and spaces in labels. NO parentheses, quotes, colons, slashes, or other punctuation inside labels — they break parsing.
-- mindmap: first line is \`mindmap\`, then a root like \`root((🌱 Topic))\`, then indent child nodes beneath it to show hierarchy.
-- Always put diagrams in a \`\`\`mermaid code block (never describe the diagram in prose instead).
+- mindmap: first line is mindmap, then a root like root((🌱 Topic)), then indent child nodes beneath it to show hierarchy.
 
-Example:
-\`\`\`mermaid
-mindmap
-  root((🌱 Photosynthesis))
-    📥 Inputs
-      ☀️ Sunlight
-      💧 Water
-      💨 Carbon dioxide
-    📤 Outputs
-      🍬 Glucose
-      🫧 Oxygen
-\`\`\`
+Example of a valid reply:
+{"text":"Photosynthesis is how a plant makes its own food from light. ☀️\\n\\n- It takes in sunlight, water, and air.\\n- It turns them into sugar for energy.","suggestions":["Show me a diagram of this","Quiz me on photosynthesis","Explain it even simpler"]}
 
 Honesty: never fabricate facts. If you're unsure, say so. You are subject-agnostic — adapt to whatever the student brings (math, science, history, languages, code, etc.).`;
 
@@ -100,7 +94,11 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: TUTOR_SYSTEM }] },
         contents,
-        generationConfig: { temperature: 0.7, maxOutputTokens: 1024 },
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1536,
+          responseMimeType: "application/json",
+        },
       }),
     });
   } catch {
@@ -123,9 +121,11 @@ export async function POST(req: Request) {
     ?.map((p) => p?.text ?? "")
     .join("")
     .trim();
-  if (!text) {
+
+  const reply = parseTutorResponse(text ?? "");
+  if (!reply.text) {
     return NextResponse.json({ error: "The tutor didn't have a reply. Try rephrasing." }, { status: 502 });
   }
 
-  return NextResponse.json({ text });
+  return NextResponse.json({ text: reply.text, suggestions: reply.suggestions });
 }
