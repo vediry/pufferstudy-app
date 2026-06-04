@@ -24,7 +24,7 @@ const MD_COMPONENTS: Components = {
   },
 };
 
-type Turn = { role: "user" | "assistant"; text: string };
+type Turn = { role: "user" | "assistant"; text: string; suggestions?: string[] };
 type Status = { kind: "idle" } | { kind: "sending" } | { kind: "error"; message: string };
 
 const SUGGESTED = [
@@ -72,12 +72,17 @@ export default function TutorPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ apiKey, messages: next }),
         });
-        const data = (await res.json().catch(() => null)) as { text?: string; error?: string } | null;
+        const data = (await res.json().catch(() => null)) as
+          | { text?: string; suggestions?: string[]; error?: string }
+          | null;
         if (!res.ok || !data?.text) {
           setStatus({ kind: "error", message: data?.error ?? "Something went wrong. Try again." });
           return;
         }
-        setMessages((prev) => [...prev, { role: "assistant", text: data.text! }]);
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", text: data.text!, suggestions: data.suggestions ?? [] },
+        ]);
         setStatus({ kind: "idle" });
       } catch {
         setStatus({ kind: "error", message: "Couldn't reach the tutor. Check your connection." });
@@ -172,6 +177,33 @@ export default function TutorPage() {
             </div>
           ),
         )}
+
+        {(() => {
+          const last = messages[messages.length - 1];
+          if (
+            status.kind === "idle" &&
+            last?.role === "assistant" &&
+            last.suggestions &&
+            last.suggestions.length > 0
+          ) {
+            return (
+              <div className="flex flex-wrap gap-2 pl-8">
+                {last.suggestions.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    disabled={!hasKey || sending}
+                    onClick={() => void send(s)}
+                    className="animate-fade-up rounded-full border border-default bg-surface-2 px-3 py-1 text-xs text-ink-muted transition-colors hover:text-ink disabled:opacity-50"
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            );
+          }
+          return null;
+        })()}
 
         {sending ? (
           <div className="flex items-center gap-2 text-sm text-ink-faint">
